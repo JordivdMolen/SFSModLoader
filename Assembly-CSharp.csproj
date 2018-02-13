@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{9AE3EB35-37E3-4DF8-B859-C0B29D6851C6}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Core">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.OdinInspector.Attributes">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\Sirenix.OdinInspector.Attributes.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GameCenterModule">
+      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Blur.cs" />
+    <Compile Include="BoolValueHolder.cs" />
+    <Compile Include="CelestialBodyData.cs" />
+    <Compile Include="Controller.cs" />
+    <Compile Include="ControlModule.cs" />
+    <Compile Include="CreateRocket.cs" />
+    <Compile Include="CustomEvent.cs" />
+    <Compile Include="Double3.cs" />
+    <Compile Include="Ellipse.cs" />
+    <Compile Include="EngineModule.cs" />
+    <Compile Include="FloatValueHolder.cs" />
+    <Compile Include="GameEvent.cs" />
+    <Compile Include="GameEventListener.cs" />
+    <Compile Include="GameSaving.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Events\EventVisibility.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Events\IEvent.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\AdvertisingResult.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\ConnectionRequest.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\ConnectionResponse.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\EndpointDetails.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\IDiscoveryListener.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\IMessageListener.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\InitializationStatus.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Nearby\NearbyConnectionConfiguration.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\ConflictCallback.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\ConflictResolutionStrategy.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\IConflictResolver.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\ISavedGameClient.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\ISavedGameMetadata.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\SavedGameMetadataUpdate.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\SavedGameRequestStatus.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.SavedGame\SelectUIStatus.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Video\CaptureOverlayStateListener.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Video\IVideoClient.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Video\VideoCapabilities.cs" />
+    <Compile Include="GooglePlayGames.BasicApi.Video\VideoCaptureState.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\CommonTypesUtil.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\DataSource.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\Gravity.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\LeaderboardCollection.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\LeaderboardStart.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\LeaderboardTimeSpan.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\ResponseStatus.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\UIStatus.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\VideoCaptureMode.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\VideoCaptureOverlayState.cs" />
+    <Compile Include="GooglePlayGames.BasicApi\VideoQualityLevel.cs" />
+    <Compile Include="GooglePlayGames.OurUtils\Logger.cs" />
+    <Compile Include="GooglePlayGames.OurUtils\Misc.cs" />
+    <Compile Include="GooglePlayGames.OurUtils\PlayGamesHelperObject.cs" />
+    <Compile Include="GooglePlayGames\PluginVersion.cs" />
+    <Compile Include="GooglePlay\MyAchievements.cs" />
+    <Compile Include="GPGSIds.cs" />
+    <Compile Include="HeightMap.cs" />
+    <Compile Include="InputController.cs" />
+    <Compile Include="Kepler.cs" />
+    <Compile Include="LandingLegModule.cs" />
+    <Compile Include="LinkModule.cs" />
+    <Compile Include="MainMenu.cs" />
+    <Compile Include="Map.cs" />
+    <Compile Include="Module.cs" />
+    <Compile Include="MoveModule.cs" />
+    <Compile Include="NewBuildSystem\Build.cs" />
+    <Compile Include="NewBuildSystem\Orientation.cs" />
+    <Compile Include="NewBuildSystem\PartData.cs" />
+    <Compile Include="NewBuildSystem\PartGrid.cs" />
+    <Compile Include="NewBuildSystem\PickPartGrid.cs" />
+    <Compile Include="NewBuildSystem\PlacedPart.cs" />
+    <Compile Include="NewBuildSystem\Utility.cs" />
+    <Compile Include="Orbit.cs" />
+    <Compile Include="ParachuteModule.cs" />
+    <Compile Include="Part.cs" />
+    <Compile Include="PartChildCollider.cs" />
+    <Compile Include="PartDatabase.cs" />
+    <Compile Include="PartsManager.cs" />
+    <Compile Include="PlanetManager.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Ref.cs" />
+    <Compile Include="ReorderableEventList.cs" />
+    <Compile Include="ReorderableList.cs" />
+    <Compile Include="Resource.cs" />
+    <Compile Include="ResourceModule.cs" />
+    <Compile Include="Saving.cs" />
+    <Compile Include="SeparatorModule.cs" />
+    <Compile Include="SimpleReorderableList.cs" />
+    <Compile Include="SortingLayerExposer.cs" />
+    <Compile Include="Soundtrack.cs" />
+    <Compile Include="TextData.cs" />
+    <Compile Include="TipsData.cs" />
+    <Compile Include="TorqueModule.cs" />
+    <Compile Include="Touch.cs" />
+    <Compile Include="UIEventDelegate\AttributeExtension.cs" />
+    <Compile Include="UIEventDelegate\Entry.cs" />
+    <Compile Include="UIEventDelegate\EventDelegate.cs" />
+    <Compile Include="UIEventDelegate\ParameterType.cs" />
+    <Compile Include="ValuesModule.cs" />
+    <Compile Include="Vessel.cs" />
+    <Compile Include="Warning.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
