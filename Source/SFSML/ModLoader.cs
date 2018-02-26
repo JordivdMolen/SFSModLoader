@@ -179,6 +179,12 @@ namespace SFSML
                         }
                     }
                 }
+                if (entryObject == null)
+                {
+                    mainConsole.log("Mod does not contain a ModLoader entry point.", "ModLoader");
+                    mainConsole.log("It is possible this mod is not compatible with ModLoader.", "ModLoader");
+                    return;
+                }
                 string infoPath = Path.Combine(Path.GetDirectoryName(modFile), Path.GetFileNameWithoutExtension(modFile));
                 if (Directory.Exists(infoPath))
                 {

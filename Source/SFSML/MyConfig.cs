@@ -47,7 +47,7 @@ namespace SFSML
 
         public void save()
         {
-            string json = JsonUtility.ToJson(this.configuration);
+            string json = JsonUtility.ToJson(this.configuration,true);
             string path = this.configurationPath;
             File.WriteAllText(path, json);
         }
