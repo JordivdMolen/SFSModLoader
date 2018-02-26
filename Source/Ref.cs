@@ -227,12 +227,14 @@ public class Ref : MonoBehaviour
 
 	public static void LoadScene(Ref.SceneType sceneToLoad)
 	{
-        MySceneChangedHook res = ModLoader.manager.castHook<MySceneChangedHook>(new MySceneChangedHook(Ref.lastScene, sceneToLoad));
+        MySceneChangeHook res = ModLoader.manager.castHook<MySceneChangeHook>(new MySceneChangeHook(Ref.lastScene, sceneToLoad));
         if (res.isCanceled()) return;
         sceneToLoad = res.targetScene;
+        Ref.SceneType oldScene = Ref.lastScene;
         Ref.lastScene = Ref.currentScene;
 		SceneManager.LoadScene(sceneToLoad.ToString(), LoadSceneMode.Single);
-	}
+        ModLoader.manager.castHook<MySceneChangedHook>(new MySceneChangedHook(oldScene, sceneToLoad));
+    }
 
 	public static int GetFigure(double value)
 	{
@@ -314,6 +316,8 @@ public class Ref : MonoBehaviour
         {
             kd = false;
         }
+        if (Ref.myModLoader!=null)
+        Ref.myModLoader.RunUpdate();
     }
    
 

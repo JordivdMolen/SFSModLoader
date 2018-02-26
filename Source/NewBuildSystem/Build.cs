@@ -1,3 +1,7 @@
+using SFSML;
+using SFSML.GameManager.Hooks.BuildRelated;
+using SFSML.GameManager.Hooks.FrameRelated;
+using SFSML.GameManager.Hooks.UnityRelated;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
@@ -234,6 +238,7 @@ namespace NewBuildSystem
 				this.dragAndDropInstruction.gameObject.SetActive(true);
 				Saving.SaveSetting(Saving.SettingKey.seenBuildInstructions, true);
 			}
+            ModLoader.manager.castHook<MyBuildMenuStartedHook>(new MyBuildMenuStartedHook());
 		}
 
 		public void MoveCamera(Vector3 delta)
@@ -502,6 +507,8 @@ namespace NewBuildSystem
 
 		private void GoForLaunch()
 		{
+            MyRocketLaunchHook result = ModLoader.manager.castHook<MyRocketLaunchHook>(new MyRocketLaunchHook(this.buildGrid.parts));
+            if (result.isCanceled()) return;
 			string jsonString = JsonUtility.ToJson(new Build.BuildSave("To Launch", Ref.cam.transform.position, this.buildGrid.parts));
 			Ref.SaveJsonString(jsonString, Saving.SaveKey.ToLaunch);
 			Ref.LoadScene(Ref.SceneType.Game);
@@ -527,5 +534,10 @@ namespace NewBuildSystem
 		public void EnableDescription()
 		{
 		}
+
+        public void OnGUI()
+        {
+            ModLoader.manager.castHook<MyBuildMenuOnGuiHook>(new MyBuildMenuOnGuiHook());
+        }
 	}
 }

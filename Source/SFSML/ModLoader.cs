@@ -17,6 +17,7 @@ using SFSML.HookSystem.MainHooks;
 using SFSML.Exceptions;
 using SFSML.Attributes;
 using SFSML.GameManager;
+using System.Collections.Generic;
 
 namespace SFSML
 {
@@ -29,6 +30,7 @@ namespace SFSML
         public static MyConsole mainConsole;
 
 		public int loadedMods = 0;
+        private Dictionary<string,MyMod> mods = new Dictionary<string, MyMod>();
         private Canvas overlayObject = null;
         public MyConsole myConsole;
         /// <summary>
@@ -40,6 +42,7 @@ namespace SFSML
 
         public static readonly string version = "pre-1.0.0.a-2";
         private static readonly string logTag = "ModLoader "+version;
+        private GameObject overlay;
 		public ModLoader()
 		{
             if (Application.platform == RuntimePlatform.WindowsPlayer)
@@ -48,22 +51,30 @@ namespace SFSML
                 mainConsole = this.myConsole;
             }
             myConsole.log("Loading ModLoader Project "+version,"");
+            try
+            {
+                AssetBundle b = AssetBundle.LoadFromFile(Application.dataPath + "/overlay.overlay1");
+                GameObject o = Ref.Instantiate<GameObject>(b.LoadAsset<GameObject>("SFSML_Overlay"));
+                o.SetActive(false);
+                this.overlay = o;
+                mainConsole.log(o.name);
+            } catch (Exception e)
+            {
+                mainConsole.logError(e);
+            }
         }
+
+       
 		
 		public void startLoadProcedure()
         {
-            mainConsole.log("Initiating load procedure", "ModLoader");
+            mainConsole.log("Initiating load procedure", logTag);
             this.performDirCheck();
 
             this.loadPriorityMods();
             this.loadMods();
         }
-
-        public void toggleOverlay()
-        {
-            overlayObject.enabled = !overlayObject.enabled;
-        }
-
+        
         public string getMyBaseDirectory()
         {
             return Application.dataPath + "/SFSML/";
@@ -146,21 +157,70 @@ namespace SFSML
             {
                 if (Path.GetExtension(modFile) != ".dll") return;
                 string modFileName = Path.GetFileNameWithoutExtension(modFile);
-                mainConsole.log("Loading mod: " + modFileName, "ModLoader");
+                mainConsole.log("Loading mod: " + modFileName, logTag);
                 Assembly modAssembly = Assembly.LoadFrom(modFile);
                 MyMod entryObject = null;
+                bool hasTextureHolder = false;
+                MyAssetHolder textureHolder = null;
                 foreach (Type modType in modAssembly.GetTypes())
                 {
                     object[] attributeList = modType.GetCustomAttributes(typeof(MyModEntryPoint), true);
                     if (attributeList.Length == 1)
                     {
                         entryObject = Activator.CreateInstance(modType) as MyMod;
+                        foreach (FieldInfo fi in modType.GetFields(BindingFlags.Instance | BindingFlags.Public))
+                        {
+                            if (fi.FieldType.Equals(typeof(MyAssetHolder)))
+                            {
+                                mainConsole.log("Assigning assetHolder", logTag);
+                                hasTextureHolder = true;
+                                textureHolder = fi.GetValue(entryObject) as MyAssetHolder;
+                            }
+                        }
                     }
                 }
+                string infoPath = Path.Combine(Path.GetDirectoryName(modFile), Path.GetFileNameWithoutExtension(modFile));
+                if (Directory.Exists(infoPath))
+                {
+                    string assetPath = Path.Combine(infoPath, "Assets");
+                    if (Directory.Exists(assetPath) && textureHolder != null)
+                    {
+                        foreach (string file in Directory.GetFiles(assetPath))
+                        {
+                            if (Path.GetExtension(file) == ".mlasset")
+                            {
+                                AssetBundle ab = AssetBundle.LoadFromFile(file);
+                                if (ab==null)
+                                {
+                                    mainConsole.log("Tried to load ModLoader-Assets from " + file + ", but failed.", logTag);
+                                    continue;
+                                }
+                                textureHolder.ab = ab;
+                            }
+                        }
+                        mainConsole.log("Loaded mod assets.", logTag);
+                    } else
+                    {
+                        if (textureHolder == null)
+                        {
+                            mainConsole.log("Mod doesn't have textureHolder. Skipping asset load proccess", logTag);
+                        } else
+                        {
+                            mainConsole.log("Mod doesn't have asset folder. Skippig asset load proccess", logTag);
+                        }
+                    }
+                }
+                if (mods.ContainsKey(entryObject.myName))
+                {
+                    mainConsole.log("Mod by the name " + entryObject.myName + " already exists!", logTag);
+                    return;
+                }
+                mods[entryObject.myName] = entryObject;
                 string dataPath = this.getMyDataDirectory() + modFileName;
                 entryObject.assignDataPath(dataPath);
                 entryObject.Load();
-                mainConsole.log("Loaded " + entryObject.myName+".\n"+entryObject.myDescription+"\nVersion "+entryObject.myVersion, "ModLoader");
+                mainConsole.log("Loaded " + entryObject.myName+".\n"+entryObject.myDescription+"\nVersion "+entryObject.myVersion, logTag);
+                this.loadedMods++;
             }
             catch (MyCoreException e)
             {
@@ -170,6 +230,16 @@ namespace SFSML
             {
                 mainConsole.logError(e);
             }
+        }
+
+        public void RunUpdate()
+        {
+
+        }
+
+        public bool isModLoaded(String name)
+        {
+            return this.mods.ContainsKey(name);
         }
     }
 }

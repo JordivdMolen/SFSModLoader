@@ -27,9 +27,8 @@ namespace SFSML
         public MyConsole()
         {
             AllocConsole();
-            this.hideConsole();
             Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
-            this.visible = false;
+            this.visible = true;
         }
         public void hideConsole()
         {
