@@ -6,4 +6,9 @@ We want to make it as easy as possible to create mods for this game.<br>
 Coders that never modded before should be able to create mods without any issue.<br><br>
 _Where can I find the documentation?_
 We are currently working on the docs.<br>
-We will publish them soon!
+We will publish them soon!<br><br>
+Credits:<br>
+**SFS-Source: MikeWe**<br>
+**ModLoader: JMteam09**<br>
+**EntryPoint: Exund**<br>
+**Translation: Asdew**
