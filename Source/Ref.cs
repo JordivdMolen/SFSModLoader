@@ -10,6 +10,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using SFSML.GameManager.Hooks.UnityRelated;
+using SFSML.GameManager.Hooks.FrameRelated;
 
 public class Ref : MonoBehaviour
 {
@@ -97,6 +98,8 @@ public class Ref : MonoBehaviour
 	public static bool loadLaunchedRocket;
 
     public static ModLoader myModLoader = null;
+
+    public static Ref r;
 
 	public AudioListener MainAudioListener;
 
@@ -286,6 +289,7 @@ public class Ref : MonoBehaviour
 
     private void Awake()
     {
+        r = this;
         Ref.cam = this.Camera;
 		Ref.inputController = this.InputController;
 		Ref.saving = this.Saving;
@@ -305,7 +309,7 @@ public class Ref : MonoBehaviour
     }
 
     private static bool kd = false;
-    void FixedUpdate()
+    void Update()
     {
         if (Input.GetKey(KeyCode.F12) && !kd)
         {
@@ -372,6 +376,12 @@ public class Ref : MonoBehaviour
 		MonoBehaviour.print(" Could not find a celestial body with this adress");
 		return null;
 	}
+
+    private void OnGUI()
+    {
+        if (ModLoader.manager != null)
+        ModLoader.manager.castHook<MyGeneralOnGuiHook>(new MyGeneralOnGuiHook(this.CurrentScene));
+    }
 
 	public static float GetSizeOfWord(TextMesh text, string word)
 	{

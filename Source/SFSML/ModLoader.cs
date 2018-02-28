@@ -13,11 +13,14 @@ using System.IO;
 using UnityEngine;
 using System.Reflection;
 using SFSML.HookSystem;
-using SFSML.HookSystem.MainHooks;
 using SFSML.Exceptions;
 using SFSML.Attributes;
 using SFSML.GameManager;
 using System.Collections.Generic;
+using SFSML.GameManager.Hooks.InputRelated;
+using System.Threading;
+using Assets.SFSML.Utility;
+using Assets.SFSML.GameManager.Hooks.ModLoader;
 
 namespace SFSML
 {
@@ -40,7 +43,7 @@ namespace SFSML
         /// </summary>
         public readonly static MyGameManager manager = new MyGameManager();
 
-        public static readonly string version = "pre-1.0.0.a-2";
+        public static readonly string version = "1.0.0.R1";
         private static readonly string logTag = "ModLoader "+version;
         private GameObject overlay;
 		public ModLoader()
@@ -50,29 +53,30 @@ namespace SFSML
                 this.myConsole = new MyConsole();
                 mainConsole = this.myConsole;
             }
-            myConsole.log("Loading ModLoader Project "+version,"");
-            try
-            {
-                AssetBundle b = AssetBundle.LoadFromFile(Application.dataPath + "/overlay.overlay1");
-                GameObject o = Ref.Instantiate<GameObject>(b.LoadAsset<GameObject>("SFSML_Overlay"));
-                o.SetActive(false);
-                this.overlay = o;
-                mainConsole.log(o.name);
-            } catch (Exception e)
-            {
-                mainConsole.logError(e);
-            }
+            myConsole.tryLogCustom("Loading ModLoader Project "+version,logTag, LogType.Generic);
         }
 
        
 		
 		public void startLoadProcedure()
         {
-            mainConsole.log("Initiating load procedure", logTag);
+            mainConsole.tryLogCustom("Initiating load procedure", logTag, LogType.Generic);
             this.performDirCheck();
 
-            this.loadPriorityMods();
-            this.loadMods();
+            try
+            {
+                this.loadPriorityMods();
+            } catch (Exception e)
+            {
+                this.myConsole.logError(e);
+            }
+            try { 
+                this.loadMods();
+            }
+            catch (Exception e)
+            {
+                this.myConsole.logError(e);
+            }
         }
         
         public string getMyBaseDirectory()
@@ -95,19 +99,19 @@ namespace SFSML
             if (!Directory.Exists(this.getMyBaseDirectory()))
             {
                 Directory.CreateDirectory(this.getMyBaseDirectory());
-                mainConsole.log("Created SFSML directory.", "DirChecker");
+                mainConsole.tryLogCustom("Created SFSML directory.", "DirChecker", LogType.Generic);
             }
             if (!Directory.Exists(this.getMyModDirectory()))
             {
                 Directory.CreateDirectory(this.getMyModDirectory());
                 Directory.CreateDirectory(this.getMyModDirectory()+ "priority/");
                 Directory.CreateDirectory(this.getMyModDirectory() + "normal/");
-                mainConsole.log("Created Mods directory.", "DirChecker");
+                mainConsole.tryLogCustom("Created Mods directory.", "DirChecker", LogType.Generic);
             }
             if (!Directory.Exists(this.getMyDataDirectory()))
             {
                 Directory.CreateDirectory(this.getMyDataDirectory());
-                mainConsole.log("Created Data directory.", "DirChecker");
+                mainConsole.tryLogCustom("Created Data directory.", "DirChecker", LogType.Generic);
             }
 
         }
@@ -172,7 +176,7 @@ namespace SFSML
                         {
                             if (fi.FieldType.Equals(typeof(MyAssetHolder)))
                             {
-                                mainConsole.log("Assigning assetHolder", logTag);
+                                mainConsole.tryLogCustom("Assigning assetHolder", logTag, LogType.Generic);
                                 hasTextureHolder = true;
                                 textureHolder = fi.GetValue(entryObject) as MyAssetHolder;
                             }
@@ -181,52 +185,31 @@ namespace SFSML
                 }
                 if (entryObject == null)
                 {
-                    mainConsole.log("Mod does not contain a ModLoader entry point.", "ModLoader");
-                    mainConsole.log("It is possible this mod is not compatible with ModLoader.", "ModLoader");
+                    mainConsole.tryLogCustom("Mod does not contain a ModLoader entry point.", logTag, LogType.Generic);
+                    mainConsole.tryLogCustom("It is possible this mod is not compatible with ModLoader.", logTag, LogType.Generic);
                     return;
                 }
                 string infoPath = Path.Combine(Path.GetDirectoryName(modFile), Path.GetFileNameWithoutExtension(modFile));
-                if (Directory.Exists(infoPath))
+                if (entryObject.LoadAssets(Path.Combine(infoPath,"Assets")))
                 {
-                    string assetPath = Path.Combine(infoPath, "Assets");
-                    if (Directory.Exists(assetPath) && textureHolder != null)
+                    mainConsole.tryLogCustom("Loaded assets.", logTag, LogType.Generic);
+                    if (entryObject.fetchIcon())
                     {
-                        foreach (string file in Directory.GetFiles(assetPath))
-                        {
-                            if (Path.GetExtension(file) == ".mlasset")
-                            {
-                                AssetBundle ab = AssetBundle.LoadFromFile(file);
-                                if (ab==null)
-                                {
-                                    mainConsole.log("Tried to load ModLoader-Assets from " + file + ", but failed.", logTag);
-                                    continue;
-                                }
-                                textureHolder.ab = ab;
-                            }
-                        }
-                        mainConsole.log("Loaded mod assets.", logTag);
-                    } else
-                    {
-                        if (textureHolder == null)
-                        {
-                            mainConsole.log("Mod doesn't have textureHolder. Skipping asset load proccess", logTag);
-                        } else
-                        {
-                            mainConsole.log("Mod doesn't have asset folder. Skippig asset load proccess", logTag);
-                        }
+                        mainConsole.tryLogCustom("Loaded custom icon (Use UIE to display).", logTag, LogType.Generic);
                     }
                 }
                 if (mods.ContainsKey(entryObject.myName))
                 {
-                    mainConsole.log("Mod by the name " + entryObject.myName + " already exists!", logTag);
+                    mainConsole.tryLogCustom("Mod by the name " + entryObject.myName + " already exists!", logTag, LogType.Generic);
                     return;
                 }
-                mods[entryObject.myName] = entryObject;
                 string dataPath = this.getMyDataDirectory() + modFileName;
                 entryObject.assignDataPath(dataPath);
                 entryObject.Load();
-                mainConsole.log("Loaded " + entryObject.myName+".\n"+entryObject.myDescription+"\nVersion "+entryObject.myVersion, logTag);
+                mainConsole.tryLogCustom("Loaded " + entryObject.myName+".\n"+entryObject.myDescription+"\nVersion "+entryObject.myVersion, logTag, LogType.Generic);
                 this.loadedMods++;
+                mods[entryObject.myName] = entryObject;
+                manager.castHook<MyModLoadedHook>(new MyModLoadedHook(entryObject));
             }
             catch (MyCoreException e)
             {
@@ -237,15 +220,79 @@ namespace SFSML
                 mainConsole.logError(e);
             }
         }
+        Array codes = Enum.GetValues(typeof(KeyCode));
+        List<KeyCode> keyDown = new List<KeyCode>();
 
+        long lastUpdate = General.getMillis();
         public void RunUpdate()
         {
-
+            long delta = General.getMillis() - lastUpdate;
+            if (delta < 100)
+                return;
+            this.KeyUpdate();
+            this.lastUpdate = General.getMillis();
+        }
+        
+        private void KeyUpdate()
+        {
+            foreach (KeyCode code in codes)
+            {
+                if (Input.GetKey(code))
+                {
+                    if (!keyDown.Contains(code))
+                    {
+                        MyKeyDownHook result = manager.castHook<MyKeyDownHook>(new MyKeyDownHook(code,true));
+                        if (result.isCanceled())
+                        {
+                            if (result.register)
+                            {
+                                keyDown.Add(code);
+                            }
+                            return;
+                        }
+                        keyDown.Add(code);
+                    }
+                }
+            }
+            List<KeyCode> nList = new List<KeyCode>(keyDown);
+            try
+            {
+                foreach (KeyCode down in nList)
+                {
+                    if (!Input.GetKey(down))
+                    {
+                        MyKeyUpHook hook = new MyKeyUpHook(down, true);
+                        MyKeyUpHook result = ModLoader.manager.castHook<MyKeyUpHook>(hook);
+                        if (result.isCanceled())
+                        {
+                            if (result.register)
+                            {
+                                keyDown.Remove(down);
+                            }
+                            return;
+                        }
+                        keyDown.Remove(down);
+                    }
+                }
+            } catch (Exception ex)
+            {
+                mainConsole.tryLogCustom(ex.Message + ex.StackTrace, logTag, LogType.Error);
+            }
         }
 
         public bool isModLoaded(String name)
         {
             return this.mods.ContainsKey(name);
+        }
+
+        public MyMod getMod(String name)
+        {
+            return this.mods[name];
+        }
+
+        public Dictionary<string, MyMod> getMods()
+        {
+            return new Dictionary<string, MyMod>(mods);
         }
     }
 }

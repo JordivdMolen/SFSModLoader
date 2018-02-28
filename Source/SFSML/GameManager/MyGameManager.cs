@@ -1,4 +1,5 @@
-﻿using SFSML.HookSystem;
+﻿using NewBuildSystem;
+using SFSML.HookSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,5 +9,6 @@ namespace SFSML.GameManager
 {
     public class MyGameManager : MyBaseHookable
     {
+        public static Build buildClass;
     }
 }

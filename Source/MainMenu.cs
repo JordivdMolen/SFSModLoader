@@ -1,6 +1,8 @@
+using SFSML;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
@@ -17,6 +19,8 @@ public class MainMenu : MonoBehaviour
 
 	public CustomEvent openTutorial;
 
+    public static MainMenu main;
+
 	private void Start()
 	{
 		if (!MainMenu.CanResumeGame())
@@ -32,7 +36,12 @@ public class MainMenu : MonoBehaviour
 		this.SetSoundToggleText();
 		this.SetFpsText();
 		this.SetAutoRotationText();
-	}
+        main = this;
+    }
+
+    public void FixedUpdate()
+    {
+    }
 
 	public void BuildNewRocket()
 	{

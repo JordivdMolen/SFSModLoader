@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using UnityEngine;
 
 namespace SFSML
 {
@@ -23,6 +24,8 @@ namespace SFSML
         const int SW_SHOW = 5;
 
         private bool visible = false;
+
+        private Action<string, LogType> logCustom;
 
         public MyConsole()
         {
@@ -56,11 +59,10 @@ namespace SFSML
             StackFrame sf = st.GetFrame(0);
             int line = sf.GetFileLineNumber();
             string file = sf.GetFileName();
-            Console.WriteLine("##[ERROR]##");
-            Console.WriteLine(e.Message);
-            Console.WriteLine(e.StackTrace);
-            Console.WriteLine(line + "@"+file);
-            Console.WriteLine("##[ERROR]##");
+            this.tryLogCustom("##[ERROR]##","ErrorReporter",LogType.Error);
+            this.tryLogCustom(e.Message+e.StackTrace, "ErrorReporter", LogType.Error);
+            this.tryLogCustom(line + "@"+file, "ErrorReporter", LogType.Error);
+            this.tryLogCustom("##[ERROR]##", "ErrorReporter", LogType.Error);
         }
         public void log(String msg, String tag)
         {
@@ -71,5 +73,33 @@ namespace SFSML
             this.log(msg, "Unkwn");
         }
 
+        public void tryLogCustom(String msg, String tag, LogType type)
+        {
+            if (this.logCustom == null)
+            {
+                this.log(msg, tag);
+            } else
+            {
+                msg = "["+tag+"]: " + msg;
+                this.logCustom(msg, type);
+            }
+        }
+        public void tryLogCustom(String msg, LogType type)
+        {
+            this.tryLogCustom(msg, "Unkwn", type);
+        }
+        public void setLogger(Action<string,LogType> logfunc)
+        {
+            this.logCustom = logfunc;
+        }
+
     }
+
+    public enum LogType
+    {
+        Generic,
+        Warning,
+        Error
+    }
+
 }
