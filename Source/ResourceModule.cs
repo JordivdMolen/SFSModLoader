@@ -1,5 +1,6 @@
 using SFSML;
-using SFSML.GameManager.Hooks.ModuleRelated;
+using SFSML.HookSystem.ReWork;
+using SFSML.HookSystem.ReWork.BaseHooks.PartHooks;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
@@ -91,16 +92,10 @@ public class ResourceModule : Module
 
 		public void TakeResource(float removeAmount)
 		{
-            MyResourceOnTakeHook hook = new MyResourceOnTakeHook(this, removeAmount);
-            try
-            {
-                hook = ModLoader.manager.castHook<MyResourceOnTakeHook>(hook);
-                if (hook.isCanceled()) return;
-            } catch (Exception e)
-            {
-                ModLoader.mainConsole.logError(e);
-            }
-			this.resourceAmount = Mathf.Max(this.resourceAmount - hook.amount, 0f);
+            float newAmount = this.resourceAmount - removeAmount;
+            MyDrainResourceHook hook = new MyDrainResourceHook(removeAmount, newAmount, this);
+            hook = MyHookSystem.executeHook<MyDrainResourceHook>(hook);
+			this.resourceAmount = Mathf.Max(this.resourceAmount - hook.amountToTake, 0f);
 			this.SetTanks();
 		}
 

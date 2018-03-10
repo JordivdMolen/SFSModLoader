@@ -9,8 +9,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using SFSML.GameManager.Hooks.UnityRelated;
-using SFSML.GameManager.Hooks.FrameRelated;
+using SFSML.HookSystem.ReWork;
+using SFSML.HookSystem.ReWork.BaseHooks;
+using SFSML.HookSystem.ReWork.BaseHooks.FrameHooks;
 
 public class Ref : MonoBehaviour
 {
@@ -230,13 +231,13 @@ public class Ref : MonoBehaviour
 
 	public static void LoadScene(Ref.SceneType sceneToLoad)
 	{
-        MySceneChangeHook res = ModLoader.manager.castHook<MySceneChangeHook>(new MySceneChangeHook(Ref.lastScene, sceneToLoad));
+        MySceneChangeHook res = MyHookSystem.executeHook<MySceneChangeHook>(new MySceneChangeHook(Ref.lastScene, sceneToLoad));
         if (res.isCanceled()) return;
-        sceneToLoad = res.targetScene;
+        sceneToLoad = res.newScene;
         Ref.SceneType oldScene = Ref.lastScene;
         Ref.lastScene = Ref.currentScene;
 		SceneManager.LoadScene(sceneToLoad.ToString(), LoadSceneMode.Single);
-        ModLoader.manager.castHook<MySceneChangedHook>(new MySceneChangedHook(oldScene, sceneToLoad));
+        MyHookSystem.executeHook<MySceneChangedHook>(new MySceneChangedHook(oldScene, sceneToLoad));
     }
 
 	public static int GetFigure(double value)
@@ -379,8 +380,7 @@ public class Ref : MonoBehaviour
 
     private void OnGUI()
     {
-        if (ModLoader.manager != null)
-        ModLoader.manager.castHook<MyGeneralOnGuiHook>(new MyGeneralOnGuiHook(this.CurrentScene));
+        MyHookSystem.executeHook<MyOnGuiHook>(new MyOnGuiHook(Ref.currentScene));
     }
 
 	public static float GetSizeOfWord(TextMesh text, string word)

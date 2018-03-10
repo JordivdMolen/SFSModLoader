@@ -1,7 +1,7 @@
 using SFSML;
-using SFSML.GameManager.Hooks.BuildRelated;
-using SFSML.GameManager.Hooks.FrameRelated;
-using SFSML.GameManager.Hooks.UnityRelated;
+using SFSML.HookSystem.ReWork;
+using SFSML.HookSystem.ReWork.BaseHooks;
+using SFSML.HookSystem.ReWork.BaseHooks.BuildHooks;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
@@ -238,7 +238,6 @@ namespace NewBuildSystem
 				this.dragAndDropInstruction.gameObject.SetActive(true);
 				Saving.SaveSetting(Saving.SettingKey.seenBuildInstructions, true);
 			}
-            ModLoader.manager.castHook<MyBuildMenuStartedHook>(new MyBuildMenuStartedHook());
 		}
 
 		public void MoveCamera(Vector3 delta)
@@ -288,7 +287,11 @@ namespace NewBuildSystem
 			Vector2 autoCorrect = this.GetAutoCorrect(vector, fingerId);
 			if (this.holdingParts[fingerId].part.partIcon != null)
 			{
-				this.holdingParts[fingerId].part.partIcon.position = Vector3.Lerp(vector, autoCorrect, 1f - this.roundStrength);
+                PlacedPart tgtPart = this.holdingParts[fingerId].part;
+                Vector3 tgtPos = Vector3.Lerp(vector, autoCorrect, 1f - this.roundStrength);
+                MyPartStartDragHook hook = new MyPartStartDragHook(tgtPart, tgtPos);
+                if (hook.isCanceled()) { return; }
+                this.holdingParts[fingerId].part.partIcon.position = hook.pos;
 			}
 		}
 
@@ -306,8 +309,12 @@ namespace NewBuildSystem
 			bool flag2 = this.pickGrid.IsInsideDropArea(Utility.ToDepth(v, this.pickMenuDistance));
 			if (flag && !flag2)
 			{
-				this.dragAndDropInstruction.InvokeEvenets();
-				this.buildGrid.PlacePart(new PlacedPart(null, (Vector3)autoCorrect - this.buildGrid.transform.position, this.holdingParts[fingerId].part.orientation.DeepCopy(), this.holdingParts[fingerId].part.partData));
+                PlacedPart newPart = new PlacedPart(null, (Vector3)autoCorrect - this.buildGrid.transform.position, this.holdingParts[fingerId].part.orientation.DeepCopy(), this.holdingParts[fingerId].part.partData);
+                MyPartCreatedHook hook = new MyPartCreatedHook(newPart);
+                hook = MyHookSystem.executeHook<MyPartCreatedHook>(hook);
+                if (hook.isCanceled()) { return; }
+                this.dragAndDropInstruction.InvokeEvenets();
+				this.buildGrid.PlacePart(hook.target);
 			}
 			if (this.holdingParts[fingerId].part.partIcon != null)
 			{
@@ -507,8 +514,8 @@ namespace NewBuildSystem
 
 		private void GoForLaunch()
 		{
-            MyRocketLaunchHook result = ModLoader.manager.castHook<MyRocketLaunchHook>(new MyRocketLaunchHook(this.buildGrid.parts));
-            if (result.isCanceled()) return;
+            MyRocketToLaunchpadHook res = MyHookSystem.executeHook<MyRocketToLaunchpadHook>(new MyRocketToLaunchpadHook());
+            if (res.isCanceled()) return;
 			string jsonString = JsonUtility.ToJson(new Build.BuildSave("To Launch", Ref.cam.transform.position, this.buildGrid.parts));
 			Ref.SaveJsonString(jsonString, Saving.SaveKey.ToLaunch);
 			Ref.LoadScene(Ref.SceneType.Game);
@@ -535,9 +542,5 @@ namespace NewBuildSystem
 		{
 		}
 
-        public void OnGUI()
-        {
-            ModLoader.manager.castHook<MyBuildMenuOnGuiHook>(new MyBuildMenuOnGuiHook());
-        }
 	}
 }

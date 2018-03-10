@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace SFSML
 {
-    public abstract class MyMod : MyBaseHookable
+    public abstract class MyMod
     {
         public readonly String myName;
         public readonly String myDescription;
@@ -83,7 +83,7 @@ namespace SFSML
                         AssetBundle ab = AssetBundle.LoadFromFile(file);
                         if (ab == null)
                         {
-                            ModLoader.mainConsole.tryLogCustom("Tried to load ModLoader-Assets from " + file + ", but failed.", this.myName, LogType.Generic);
+                            ModLoader.mainConsole.tryLogCustom("Tried to load ModLoader-Assets from " + file + ", but failed.", this.myName, LogType.Error);
                             continue;
                         }
                         this.assetHolder = new MyAssetHolder(ab);
@@ -94,7 +94,7 @@ namespace SFSML
             }
             else
             {
-                ModLoader.mainConsole.tryLogCustom("Mod doesn't have asset folder. Skippig asset load proccess", this.myName, LogType.Generic);
+                ModLoader.mainConsole.tryLogCustom("Mod doesn't have asset folder. Skipping asset load proccess", this.myName, LogType.Generic);
             }
             return false;
         }

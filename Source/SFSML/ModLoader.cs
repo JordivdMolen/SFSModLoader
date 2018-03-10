@@ -15,12 +15,12 @@ using System.Reflection;
 using SFSML.HookSystem;
 using SFSML.Exceptions;
 using SFSML.Attributes;
-using SFSML.GameManager;
 using System.Collections.Generic;
-using SFSML.GameManager.Hooks.InputRelated;
 using System.Threading;
 using Assets.SFSML.Utility;
-using Assets.SFSML.GameManager.Hooks.ModLoader;
+using UnityEngine.Purchasing;
+using SFSML.HookSystem.ReWork;
+using SFSML.HookSystem.ReWork.BaseHooks.UtilHooks;
 
 namespace SFSML
 {
@@ -28,7 +28,7 @@ namespace SFSML
     /// The coreclass of SFSML.
     /// </summary>
     [MyModEntryPoint]
-    public class ModLoader : MyBaseHookable
+    public class ModLoader
 	{
         public static MyConsole mainConsole;
 
@@ -41,9 +41,8 @@ namespace SFSML
         /// This will receive all the NON-STATIC OBJECT hooks.
         /// Things like the main entry point of the game will have their own hook manager!
         /// </summary>
-        public readonly static MyGameManager manager = new MyGameManager();
 
-        public static readonly string version = "1.0.0.R1";
+        public static readonly string version = "1.0.0.R2";
         private static readonly string logTag = "ModLoader "+version;
         private GameObject overlay;
 		public ModLoader()
@@ -164,23 +163,12 @@ namespace SFSML
                 mainConsole.log("Loading mod: " + modFileName, logTag);
                 Assembly modAssembly = Assembly.LoadFrom(modFile);
                 MyMod entryObject = null;
-                bool hasTextureHolder = false;
-                MyAssetHolder textureHolder = null;
                 foreach (Type modType in modAssembly.GetTypes())
                 {
                     object[] attributeList = modType.GetCustomAttributes(typeof(MyModEntryPoint), true);
                     if (attributeList.Length == 1)
                     {
                         entryObject = Activator.CreateInstance(modType) as MyMod;
-                        foreach (FieldInfo fi in modType.GetFields(BindingFlags.Instance | BindingFlags.Public))
-                        {
-                            if (fi.FieldType.Equals(typeof(MyAssetHolder)))
-                            {
-                                mainConsole.tryLogCustom("Assigning assetHolder", logTag, LogType.Generic);
-                                hasTextureHolder = true;
-                                textureHolder = fi.GetValue(entryObject) as MyAssetHolder;
-                            }
-                        }
                     }
                 }
                 if (entryObject == null)
@@ -205,11 +193,20 @@ namespace SFSML
                 }
                 string dataPath = this.getMyDataDirectory() + modFileName;
                 entryObject.assignDataPath(dataPath);
+                MethodInfo[] methods = entryObject.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                foreach (MethodInfo method in methods)
+                {
+                    MyListenerAttribute[] att = (MyListenerAttribute[]) method.GetCustomAttributes(typeof(MyListenerAttribute), true);
+                    if (att.Length == 1)
+                    {
+                        new HookSystem.ReWork.MyHookListener(method,entryObject);
+                    }
+                }
                 entryObject.Load();
                 mainConsole.tryLogCustom("Loaded " + entryObject.myName+".\n"+entryObject.myDescription+"\nVersion "+entryObject.myVersion, logTag, LogType.Generic);
                 this.loadedMods++;
                 mods[entryObject.myName] = entryObject;
-                manager.castHook<MyModLoadedHook>(new MyModLoadedHook(entryObject));
+                MyHookSystem.executeHook<MyModLoadedHook>(new MyModLoadedHook(entryObject));
             }
             catch (MyCoreException e)
             {
@@ -241,7 +238,7 @@ namespace SFSML
                 {
                     if (!keyDown.Contains(code))
                     {
-                        MyKeyDownHook result = manager.castHook<MyKeyDownHook>(new MyKeyDownHook(code,true));
+                        MyKeyDownHook result = MyHookSystem.executeHook<MyKeyDownHook>(new MyKeyDownHook(code));
                         if (result.isCanceled())
                         {
                             if (result.register)
@@ -261,8 +258,8 @@ namespace SFSML
                 {
                     if (!Input.GetKey(down))
                     {
-                        MyKeyUpHook hook = new MyKeyUpHook(down, true);
-                        MyKeyUpHook result = ModLoader.manager.castHook<MyKeyUpHook>(hook);
+                        MyKeyUpHook hook = new MyKeyUpHook(down);
+                        MyKeyUpHook result = MyHookSystem.executeHook<MyKeyUpHook>(hook);
                         if (result.isCanceled())
                         {
                             if (result.register)

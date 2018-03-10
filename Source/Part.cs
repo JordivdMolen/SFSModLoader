@@ -1,6 +1,7 @@
 using NewBuildSystem;
 using SFSML;
-using SFSML.GameManager.Hooks.PartRelated;
+using SFSML.HookSystem.ReWork;
+using SFSML.HookSystem.ReWork.BaseHooks.PartHooks;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
@@ -198,7 +199,7 @@ public class Part : MonoBehaviour
     {
         try
         { 
-            MyOnUseHook result = ModLoader.manager.castHook<MyOnUseHook>(new MyOnUseHook(this));
+            MyPartUsedHook result = MyHookSystem.executeHook<MyPartUsedHook>(new MyPartUsedHook(this));
             if (result.isCanceled()) { return; }
         }
         catch (Exception e)
@@ -230,8 +231,8 @@ public class Part : MonoBehaviour
 
 	public void DestroyPart(bool createExplosion, bool disablePartToPartDamage)
 	{
-        MyBeforeDestroyHook hook = new MyBeforeDestroyHook(this);
-        hook = ModLoader.manager.castHook<MyBeforeDestroyHook>(hook);
+        MyPartUsedHook hook = new MyPartUsedHook(this);
+        hook = MyHookSystem.executeHook<MyPartUsedHook>(hook);
         if (hook.isCanceled()) return;
         while (this.joints.Count > 0)
 		{
