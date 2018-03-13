@@ -193,7 +193,7 @@ namespace SFSML
                 }
                 string dataPath = this.getMyDataDirectory() + modFileName;
                 entryObject.assignDataPath(dataPath);
-                MethodInfo[] methods = entryObject.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                MethodInfo[] methods = modAssembly.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
                 foreach (MethodInfo method in methods)
                 {
                     MyListenerAttribute[] att = (MyListenerAttribute[]) method.GetCustomAttributes(typeof(MyListenerAttribute), true);
@@ -252,28 +252,22 @@ namespace SFSML
                 }
             }
             List<KeyCode> nList = new List<KeyCode>(keyDown);
-            try
+            foreach (KeyCode down in nList)
             {
-                foreach (KeyCode down in nList)
+                if (!Input.GetKey(down))
                 {
-                    if (!Input.GetKey(down))
+                    MyKeyUpHook hook = new MyKeyUpHook(down);
+                    MyKeyUpHook result = MyHookSystem.executeHook<MyKeyUpHook>(hook);
+                    if (result.isCanceled())
                     {
-                        MyKeyUpHook hook = new MyKeyUpHook(down);
-                        MyKeyUpHook result = MyHookSystem.executeHook<MyKeyUpHook>(hook);
-                        if (result.isCanceled())
+                        if (result.register)
                         {
-                            if (result.register)
-                            {
-                                keyDown.Remove(down);
-                            }
-                            return;
+                            keyDown.Remove(down);
                         }
-                        keyDown.Remove(down);
+                        return;
                     }
+                    keyDown.Remove(down);
                 }
-            } catch (Exception ex)
-            {
-                mainConsole.tryLogCustom(ex.Message + ex.StackTrace, logTag, LogType.Error);
             }
         }
 

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SFSML.HookSystem.ReWork.BaseHooks.UtilHooks
 {
-    public class MyModLoadedHook
+    public class MyModLoadedHook : MyHook
     {
         public MyMod targetHook;
         public MyModLoadedHook(MyMod mod)

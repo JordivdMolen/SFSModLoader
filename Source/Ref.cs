@@ -307,11 +307,15 @@ public class Ref : MonoBehaviour
             Ref.myModLoader = new ModLoader();
             Ref.myModLoader.startLoadProcedure();
         }
+        this.enabled = true;
+        this.gameObject.SetActive(true);
     }
 
     private static bool kd = false;
     void Update()
     {
+        if (Ref.myModLoader != null)
+            Ref.myModLoader.RunUpdate();
         if (Input.GetKey(KeyCode.F12) && !kd)
         {
             Ref.myModLoader.myConsole.toggleConsole();
@@ -321,8 +325,6 @@ public class Ref : MonoBehaviour
         {
             kd = false;
         }
-        if (Ref.myModLoader!=null)
-        Ref.myModLoader.RunUpdate();
     }
    
 

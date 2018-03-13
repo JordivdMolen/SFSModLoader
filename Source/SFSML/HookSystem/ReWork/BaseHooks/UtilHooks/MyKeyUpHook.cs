@@ -8,7 +8,7 @@ namespace SFSML.HookSystem.ReWork.BaseHooks.UtilHooks
 {
     public class MyKeyUpHook : MyHook
     {
-        KeyCode keyUp;
+        public KeyCode keyUp;
         public bool register;
         public MyKeyUpHook(KeyCode key)
         {

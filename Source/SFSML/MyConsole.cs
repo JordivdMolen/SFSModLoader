@@ -81,7 +81,14 @@ namespace SFSML
             } else
             {
                 msg = "["+tag+"]: " + msg;
-                this.logCustom(msg, type);
+                try
+                {
+                    this.logCustom(msg, type);
+                }
+                catch (Exception e)
+                {
+                    this.logError(e);
+                }
             }
         }
         public void tryLogCustom(String msg, LogType type)
