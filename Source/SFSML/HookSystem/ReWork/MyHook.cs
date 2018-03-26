@@ -22,5 +22,13 @@ namespace SFSML.HookSystem.ReWork
         {
             this.cancel = can;
         }
+        public T execute<T>()
+        {
+            return MyHookSystem.executeHook<T>((T)(object)this);
+        }
+        public object executeDefault()
+        {
+            return MyHookSystem.executeHook(this, this.GetType());
+        }
     }
 }

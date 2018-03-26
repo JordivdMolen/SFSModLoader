@@ -3,7 +3,6 @@ using SFSML.HookSystem;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -27,6 +26,10 @@ namespace SFSML
         }
         public void loadConfiguration(Type configType)
         {
+            if (!Directory.Exists(Path.GetDirectoryName(this.configurationPath)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(this.configurationPath));
+            }
             if (!File.Exists(this.configurationPath))
             {
                 object obj = Activator.CreateInstance(configType);

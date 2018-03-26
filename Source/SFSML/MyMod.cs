@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using SFSML.Attributes;
 
 namespace SFSML
 {
@@ -25,12 +26,12 @@ namespace SFSML
             this.myDescription = description;
             this.myVersion = version;
         }
-        public MyMod(String name, String description, string version, Type configurationType)
+        public MyMod(String name, String description, string version, Type cfg)
         {
             this.myName = name;
             this.myDescription = description;
             this.myVersion = version;
-            this.cfgType = configurationType;
+            this.cfgType = cfg;
         }
         protected abstract void onLoad();
         protected abstract void onUnload();
@@ -46,9 +47,18 @@ namespace SFSML
         {
             if (this.dataPath == null)
             {
+                string cfgPath = Path.Combine(path, "Config.cfg");
                 this.dataPath = path;
-                if (cfgType != null)
-                this.configurationObject = new MyConfig(path + ".cfg",this.cfgType);
+                MyConfigIdentifier[] tags = (MyConfigIdentifier[]) this.GetType().GetCustomAttributes(typeof(MyConfigIdentifier), true);
+                if (tags.Length == 1)
+                {
+                    this.configurationObject = new MyConfig(cfgPath, tags[0].cfgType);
+                    this.configurationObject.loadConfiguration(tags[0].cfgType);
+                } else if(this.cfgType != null)
+                {
+                    this.configurationObject = new MyConfig(cfgPath, this.cfgType);
+                    this.configurationObject.loadConfiguration(this.cfgType);
+                }
             }
         }
         public string getDataPath()
@@ -94,7 +104,7 @@ namespace SFSML
             }
             else
             {
-                ModLoader.mainConsole.tryLogCustom("Mod doesn't have asset folder. Skipping asset load proccess", this.myName, LogType.Generic);
+                ModLoader.mainConsole.tryLogCustom(ModLoader.translation.autoFormat("@ModNoAssetFolder",myName), this.myName, LogType.Generic);
             }
             return false;
         }

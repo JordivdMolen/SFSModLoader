@@ -21,6 +21,9 @@ using Assets.SFSML.Utility;
 using UnityEngine.Purchasing;
 using SFSML.HookSystem.ReWork;
 using SFSML.HookSystem.ReWork.BaseHooks.UtilHooks;
+using SFSML.Enum;
+using SFSML.Translation;
+using SFSML.Translation.Languages;
 
 namespace SFSML
 {
@@ -43,16 +46,31 @@ namespace SFSML
         /// </summary>
 
         public static readonly string version = "1.0.0.R2";
-        private static readonly string logTag = "ModLoader "+version;
+        private static string logTag = "ModLoader "+version;
+        public static MyTranslationController<ModLoaderLang> translation;
         private GameObject overlay;
 		public ModLoader()
-		{
+        {
+            this.performDirCheck();
+            //Setup local/static fields
+            translation = new MyTranslationController<ModLoaderLang>(this.getMyDataDirectory(), "ModLoaderTranslations");
+            logTag = translation.autoFormat("@LogTag");
             if (Application.platform == RuntimePlatform.WindowsPlayer)
             {
                 this.myConsole = new MyConsole();
                 mainConsole = this.myConsole;
             }
-            myConsole.tryLogCustom("Loading ModLoader Project "+version,logTag, LogType.Generic);
+            myConsole.tryLogCustom(String.Format(translation.autoFormat("@EntryMessage"),translation.autoFormat("@LoaderVersion")),logTag, LogType.Generic);
+
+            new MyHookListener((hook) =>
+            {
+                MyKeyDownHook keyHook = (MyKeyDownHook)hook;
+                if (keyHook.keyDown == KeyCode.F12)
+                {
+                    mainConsole.toggleConsole();
+                }
+                return hook;
+            }, typeof(MyKeyDownHook));
         }
 
        
@@ -60,7 +78,6 @@ namespace SFSML
 		public void startLoadProcedure()
         {
             mainConsole.tryLogCustom("Initiating load procedure", logTag, LogType.Generic);
-            this.performDirCheck();
 
             try
             {
@@ -80,17 +97,33 @@ namespace SFSML
         
         public string getMyBaseDirectory()
         {
-            return Application.dataPath + "/SFSML/";
+		    return Path.Combine(Application.dataPath,"SFSML");
         }
 
         public string getMyModDirectory()
         {
-            return Application.dataPath + "/SFSML/Mods/";
+		    return Path.Combine(Path.Combine(Application.dataPath,"SFSML"),"Mods");
         }
 
         public string getMyDataDirectory()
         {
-            return Application.dataPath + "/SFSML/Data/";
+		    return Path.Combine(Path.Combine(Application.dataPath,"SFSML"),"Data");
+        }
+
+        public string getMyDirectory(PathFinder path)
+        {
+            switch (path)
+            {
+                case PathFinder.MyDataDir:
+                    return this.getMyDataDirectory();
+                case PathFinder.MyModDir:
+                    return this.getMyModDirectory();
+                case PathFinder.MyNormalModDir:
+					return Path.Combine(this.getMyModDirectory(), "normal");
+                case PathFinder.MyPriorityModDir:
+                    return Path.Combine(this.getMyModDirectory(), "priority"); 
+            }
+            return null;
         }
 
         private void performDirCheck()
@@ -103,8 +136,8 @@ namespace SFSML
             if (!Directory.Exists(this.getMyModDirectory()))
             {
                 Directory.CreateDirectory(this.getMyModDirectory());
-                Directory.CreateDirectory(this.getMyModDirectory()+ "priority/");
-                Directory.CreateDirectory(this.getMyModDirectory() + "normal/");
+                Directory.CreateDirectory(this.getMyDirectory(PathFinder.MyNormalModDir));
+                Directory.CreateDirectory(this.getMyDirectory(PathFinder.MyPriorityModDir));
                 mainConsole.tryLogCustom("Created Mods directory.", "DirChecker", LogType.Generic);
             }
             if (!Directory.Exists(this.getMyDataDirectory()))
@@ -118,7 +151,7 @@ namespace SFSML
         {
             try
             {
-                string[] priorityMods = Directory.GetFiles(this.getMyModDirectory() + "priority/");
+                string[] priorityMods = Directory.GetFiles(this.getMyDirectory(PathFinder.MyPriorityModDir));
                 foreach (string mod in priorityMods)
                 {
                     if (Path.GetExtension(mod) != ".dll") continue;
@@ -139,7 +172,7 @@ namespace SFSML
         {
             try
             { 
-                string[] normalMods = Directory.GetFiles(this.getMyModDirectory() + "normal/");
+                string[] normalMods = Directory.GetFiles(this.getMyDirectory(PathFinder.MyNormalModDir));
                 foreach (string mod in normalMods)
                 {
                     this.loadModFromFile(mod);
@@ -163,7 +196,7 @@ namespace SFSML
                 mainConsole.log("Loading mod: " + modFileName, logTag);
                 Assembly modAssembly = Assembly.LoadFrom(modFile);
                 MyMod entryObject = null;
-                foreach (Type modType in modAssembly.GetTypes())
+				foreach (Type modType in modAssembly.GetTypes())
                 {
                     object[] attributeList = modType.GetCustomAttributes(typeof(MyModEntryPoint), true);
                     if (attributeList.Length == 1)
@@ -191,9 +224,9 @@ namespace SFSML
                     mainConsole.tryLogCustom("Mod by the name " + entryObject.myName + " already exists!", logTag, LogType.Generic);
                     return;
                 }
-                string dataPath = this.getMyDataDirectory() + modFileName;
+                string dataPath = Path.Combine(this.getMyDataDirectory(), modFileName);
                 entryObject.assignDataPath(dataPath);
-                MethodInfo[] methods = modAssembly.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+				MethodInfo[] methods = entryObject.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
                 foreach (MethodInfo method in methods)
                 {
                     MyListenerAttribute[] att = (MyListenerAttribute[]) method.GetCustomAttributes(typeof(MyListenerAttribute), true);
@@ -202,8 +235,21 @@ namespace SFSML
                         new HookSystem.ReWork.MyHookListener(method,entryObject);
                     }
                 }
+				FieldInfo[] fields = entryObject.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+				foreach (FieldInfo field in fields)
+				{
+					MyHookListenerContainer[] att = (MyHookListenerContainer[]) field.GetCustomAttributes(typeof(MyHookListenerContainer),true);
+					if (att.Length == 1)
+					{
+						MethodInfo[] fieldMethods = field.GetValue(entryObject).GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+						foreach (MethodInfo fieldMethod in fieldMethods)
+						{
+							new MyHookListener(fieldMethod,entryObject);
+						}
+					}
+				}
                 entryObject.Load();
-                mainConsole.tryLogCustom("Loaded " + entryObject.myName+".\n"+entryObject.myDescription+"\nVersion "+entryObject.myVersion, logTag, LogType.Generic);
+                mainConsole.tryLogCustom(translation.autoFormat("@ModEntry",entryObject.myName,entryObject.myVersion,entryObject.myDescription), logTag, LogType.Generic);
                 this.loadedMods++;
                 mods[entryObject.myName] = entryObject;
                 MyHookSystem.executeHook<MyModLoadedHook>(new MyModLoadedHook(entryObject));
@@ -217,7 +263,7 @@ namespace SFSML
                 mainConsole.logError(e);
             }
         }
-        Array codes = Enum.GetValues(typeof(KeyCode));
+        Array codes = System.Enum.GetValues(typeof(KeyCode));
         List<KeyCode> keyDown = new List<KeyCode>();
 
         long lastUpdate = General.getMillis();
