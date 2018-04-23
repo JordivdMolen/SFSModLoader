@@ -152,6 +152,7 @@
     <Compile Include="SFSML\SFSMLBase.cs" />
     <Compile Include="SFSML\Translation\Languages\ModLoaderLang.cs" />
     <Compile Include="SFSML\Translation\MyTranslationController.cs" />
+    <Compile Include="SFSML\Utility\IMGUIUtil.cs" />
     <Compile Include="SFSML\Utility\UnityUtil.cs" />
     <Compile Include="SimpleReorderableList.cs" />
     <Compile Include="SortingLayerExposer.cs" />
