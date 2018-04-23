@@ -5,6 +5,8 @@ using SFSML.HookSystem.ReWork.BaseHooks.BuildHooks;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Text;
+using SFSML;
 
 namespace NewBuildSystem
 {
@@ -75,7 +77,7 @@ namespace NewBuildSystem
 			}
 		}
 
-		private void FixOrientation()
+		public void FixOrientation()
 		{
 			for (int i = 0; i < this.holdingParts.Length; i++)
 			{
@@ -234,7 +236,7 @@ namespace NewBuildSystem
 			}
 		}
 
-		private Vector2 GetAutoCorrect(Vector2 partPos, int fingerId)
+		public Vector2 GetAutoCorrect(Vector2 partPos, int fingerId)
 		{
 			Vector2 vector = Utility.RoundToHalf(partPos);
 			Vector2 offset = partPos - vector;
@@ -247,7 +249,7 @@ namespace NewBuildSystem
 			return this.GetAutoCorrectForSnap(vector, fingerId);
 		}
 
-		private Vector2 GetAutoCorrectForOverlaping(Vector2 partPosRounded, Vector2 offset, int fingerId)
+		public Vector2 GetAutoCorrectForOverlaping(Vector2 partPosRounded, Vector2 offset, int fingerId)
 		{
 			bool flag = offset.y > 0f && this.TryCorrect(partPosRounded, new Vector2(0f, 0.5f), fingerId);
 			Vector2 result;
@@ -318,7 +320,7 @@ namespace NewBuildSystem
 			return result;
 		}
 
-		private Vector2 GetAutoCorrectForSnap(Vector2 partPos, int fingerId)
+		public Vector2 GetAutoCorrectForSnap(Vector2 partPos, int fingerId)
 		{
 			Vector2 b = Vector2.zero;
 			foreach (PartData.SnapPoint snapPoint in this.holdingParts[fingerId].part.partData.snapPoints)
@@ -373,7 +375,7 @@ namespace NewBuildSystem
 			return partPos - b;
 		}
 
-		private float ConnectedSurface(Vector2 position, int fingerId)
+		public float ConnectedSurface(Vector2 position, int fingerId)
 		{
 			float num = 0f;
 			PlacedPart placedPart = new PlacedPart(null, position, this.holdingParts[fingerId].part.orientation, this.holdingParts[fingerId].part.partData);
@@ -394,7 +396,7 @@ namespace NewBuildSystem
 			return num;
 		}
 
-		private bool TryCorrect(Vector2 original, Vector2 change, int fingerId)
+		public bool TryCorrect(Vector2 original, Vector2 change, int fingerId)
 		{
 			return !this.buildGrid.Overlap(new PlacedPart(null, original + change, this.holdingParts[fingerId].part.orientation, this.holdingParts[fingerId].part.partData));
 		}
@@ -490,7 +492,7 @@ namespace NewBuildSystem
 			}
 		}
 
-		private void LoadHoldingIcon(int fingerId, Vector2 touchPosWorld)
+		public void LoadHoldingIcon(int fingerId, Vector2 touchPosWorld)
 		{
 			this.LoadPartDescription(this.holdingParts[fingerId].part.partData);
 			this.holdingParts[fingerId].part.partIcon = PartGrid.LoadIcon(this.buildGrid.iconPrefab, this.holdingParts[fingerId].part.partData.prefab, touchPosWorld, Vector3.one, null, 100, Color.white, false);
@@ -499,14 +501,20 @@ namespace NewBuildSystem
 			this.holdingParts[fingerId].FlipX(0f);
 		}
 
-		private bool IsHolding(int fingerId)
+		public bool IsHolding(int fingerId)
 		{
 			return !Build.HoldingPart.isNull(this.holdingParts[fingerId]) && this.holdingParts[fingerId].part.partIcon != null;
 		}
 
 		public void LoadSave(Build.BuildSave buildSaveToLoad)
 		{
-			this.buildGrid.DeleteAllIcons();
+            MyVesselLoadedHook myVesselLoadedHook = new MyVesselLoadedHook(buildSaveToLoad);
+            myVesselLoadedHook = MyHookSystem.executeHook<MyVesselLoadedHook>(myVesselLoadedHook);
+            if (myVesselLoadedHook.isCanceled())
+            {
+                return;
+            }
+            this.buildGrid.DeleteAllIcons();
 			Camera.main.transform.position = buildSaveToLoad.cameraPosition;
 			this.buildGrid.parts = Build.BuildSave.PlacedPartSave.FromSave(buildSaveToLoad.parts, this.partDatabase);
 			this.buildGrid.LoadAllIcons();
@@ -518,7 +526,7 @@ namespace NewBuildSystem
 			base.Invoke("AskExit", 0.1f);
 		}
 
-		private void AskExit()
+		public void AskExit()
 		{
 			bool flag = this.buildGrid.parts.Count == 0;
 			if (flag)
@@ -747,7 +755,13 @@ namespace NewBuildSystem
 		{
 			public static void AddQuicksave(Build.BuildSave newSave)
 			{
-				Build.BuildQuicksaves buildQuicksaves = Build.BuildQuicksaves.LoadBuildQuicksaves();
+                MyVesselSavedHook myVesselSavedHook = new MyVesselSavedHook(newSave);
+                myVesselSavedHook = MyHookSystem.executeHook<MyVesselSavedHook>(myVesselSavedHook);
+                if (myVesselSavedHook.isCanceled())
+                {
+                    return;
+                }
+                Build.BuildQuicksaves buildQuicksaves = Build.BuildQuicksaves.LoadBuildQuicksaves();
 				buildQuicksaves.buildSaves.Add(newSave);
 				Build.BuildQuicksaves.SaveBuildQuicksaves(buildQuicksaves);
 			}
@@ -771,7 +785,7 @@ namespace NewBuildSystem
 				}
 			}
 
-			private static void SaveBuildQuicksaves(Build.BuildQuicksaves buildQuicksaves)
+			public static void SaveBuildQuicksaves(Build.BuildQuicksaves buildQuicksaves)
 			{
 				Ref.SaveJsonString(JsonUtility.ToJson(buildQuicksaves), Saving.SaveKey.BuildQuicksaves);
 			}
@@ -816,7 +830,23 @@ namespace NewBuildSystem
 					this.partName = part.partData.name;
 					this.position = part.position;
 					this.orientation = part.orientation;
-				}
+
+                    //Tags formatting for save
+                    StringBuilder stringBuilder = new StringBuilder();
+                    foreach (string text in part.partData.tags.Keys)
+                    {
+                        stringBuilder.Append(string.Concat(new string[]
+                        {
+                            part.partData.tags[text].GetType().AssemblyQualifiedName,
+                            "#",
+                            text,
+                            "#",
+                            JsonUtility.ToJson(part.partData.tags[text]),
+                            "|"
+                        }));
+                    }
+                    this.tagsString = stringBuilder.ToString();
+                }
 
 				public static List<Build.BuildSave.PlacedPartSave> ToSave(List<PlacedPart> parts)
 				{
@@ -837,7 +867,48 @@ namespace NewBuildSystem
 						bool flag = partByName != null;
 						if (flag)
 						{
-							list.Add(new PlacedPart(null, parts[i].position, parts[i].orientation, partByName));
+
+                            //Tags parsing from text back to a Dictionary
+                            partByName.tags.Clear();
+                            try
+                            {
+                                foreach (string text in parts[i].tagsString.Split(new char[]
+                                {
+                                    '|'
+                                }))
+                                {
+                                    if (!(text == ""))
+                                    {
+                                        Type type = Type.GetType(text.Split(new char[]
+                                        {
+                                            '#'
+                                        })[0]);
+                                        string key = text.Split(new char[]
+                                        {
+                                            '#'
+                                        })[1];
+                                        //ModLoader.mainConsole.log(text.Split('#')[2]);
+
+                                        object obj = JsonUtility.FromJson(text.Split(new char[]
+                                        {
+                                            '#'
+                                        })[2], type);
+
+                                        //ModLoader.mainConsole.log(obj.ToString(), "Tags");
+                                        partByName.tags.Add(key, obj);
+                                    }
+                                }
+                                /*foreach (string text2 in partByName.tags.Keys)
+                                {
+                                    ModLoader.mainConsole.log(text2 + " " + partByName.tags[text2].ToString(), "Tags");
+                                }*/
+                            }
+                            catch (Exception e)
+                            {
+                                ModLoader.mainConsole.logError(e);
+                            }
+
+                            list.Add(new PlacedPart(null, parts[i].position, parts[i].orientation, partByName));
 						}
 					}
 					return list;
@@ -848,7 +919,10 @@ namespace NewBuildSystem
 				public Vector2 position;
 
 				public Orientation orientation;
-			}
+
+                //Custom field for custom values saving
+                public string tagsString;
+            }
 		}
 	}
 }

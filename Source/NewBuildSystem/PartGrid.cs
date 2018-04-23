@@ -518,7 +518,7 @@ namespace NewBuildSystem
 			return num;
 		}
 
-		private float GetMass()
+		public float GetMass()
 		{
 			float num = 0f;
 			for (int i = 0; i < this.parts.Count; i++)

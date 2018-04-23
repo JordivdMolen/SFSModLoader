@@ -110,7 +110,7 @@ namespace NewBuildSystem
 			}
 		}
 
-		private void DeleteIcons()
+		public void DeleteIcons()
 		{
 			while (this.icons.Count > 0)
 			{

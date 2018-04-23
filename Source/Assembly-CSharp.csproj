@@ -118,6 +118,8 @@
     <Compile Include="SFSML\Attributes\MyModEntryPoint.cs" />
     <Compile Include="SFSML\Enum\PathFinder.cs" />
     <Compile Include="SFSML\Exceptions\MyCoreException.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyVesselLoadedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyVesselSavedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyPartCreatedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyPartDragHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyRocketToLaunchpadHook.cs" />

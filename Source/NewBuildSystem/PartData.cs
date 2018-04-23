@@ -86,7 +86,11 @@ namespace NewBuildSystem
 
 		public float breakVelocity = 5f;
 
-		[Space]
+
+        //Custom field for custom values saving
+        public Dictionary<string, object> tags = new Dictionary<string, object>();
+
+        [Space]
 		public PartData.Area[] areas;
 
 		[Space]

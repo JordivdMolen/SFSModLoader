@@ -7,7 +7,7 @@ using UnityEngine;
 public class CelestialBodyData : MonoBehaviour
 {
 	[Button("Validate", 0)]
-	private void OnValidate()
+	public void OnValidate()
 	{
 		base.transform.name = this.bodyName;
 		this.radius = this.diameterKm * 500.0;
@@ -711,7 +711,7 @@ public class CelestialBodyData : MonoBehaviour
 		[Space]
 		[SerializeField]
 		[SuffixLabel(".000 km ", false)]
-		private double orbitHeightMm;
+		public double orbitHeightMm;
 
 		public double SOIMultiplier;
 
