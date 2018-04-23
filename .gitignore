@@ -2,8 +2,4 @@
 # Ce fichier .gitignore a été automatiquement créé par Microsoft(R) Visual Studio.
 ################################################################################
 
-/Source/bin/Debug/Apple.dll
 /Source/bin/Debug
-/Source/bin/Debug
-/Source/bin/Debug/Assembly-CSharp.dll
-/Source/bin/Debug/Assembly-CSharp.pdb
