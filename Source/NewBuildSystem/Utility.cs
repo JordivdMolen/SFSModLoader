@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace NewBuildSystem
@@ -7,11 +7,35 @@ namespace NewBuildSystem
 	{
 		public static bool IsInsideRange(float value, float a, float b, bool canBeInsideEdge)
 		{
+			bool result;
 			if (canBeInsideEdge)
 			{
-				return value >= Mathf.Min(a, b) && value <= Mathf.Max(a, b);
+				result = (value >= Mathf.Min(a, b) && value <= Mathf.Max(a, b));
 			}
-			return value > Mathf.Min(a, b) && value < Mathf.Max(a, b);
+			else
+			{
+				result = (value > Mathf.Min(a, b) && value < Mathf.Max(a, b));
+			}
+			return result;
+		}
+
+		public static bool IsInsideRange(float value, float a, float b, bool canBeInsideEdge, float edge)
+		{
+			bool result;
+			if (canBeInsideEdge)
+			{
+				result = (value >= Mathf.Min(a, b) - edge && value <= Mathf.Max(a, b) + edge);
+			}
+			else
+			{
+				result = (value > Mathf.Min(a, b) - edge && value < Mathf.Max(a, b) + edge);
+			}
+			return result;
+		}
+
+		public static double Overlap(double a1, double a2, double b1, double b2)
+		{
+			return Math.Min(Math.Max(a1, a2), Math.Max(b1, b2)) - Math.Max(Math.Min(a1, a2), Math.Min(b1, b2));
 		}
 
 		public static bool LineOverlaps(float a1, float a2, float b1, float b2)
@@ -80,12 +104,47 @@ namespace NewBuildSystem
 			int num = 0;
 			for (int i = 0; i < descriptionRaw.Length; i++)
 			{
-				if (descriptionRaw[i].ToString() == "/")
+				bool flag = descriptionRaw[i].ToString() == "/";
+				if (flag)
 				{
 					num++;
 				}
 			}
 			return num;
+		}
+
+		public static void DrawSquare(Vector2 posA, Vector2 posB, float time, Color color)
+		{
+			Debug.DrawLine(posA, new Vector3(posA.x, posB.y), color, time);
+			Debug.DrawLine(posA, new Vector3(posB.x, posA.y), color, time);
+			Debug.DrawLine(posB, new Vector3(posA.x, posB.y), color, time);
+			Debug.DrawLine(posB, new Vector3(posB.x, posA.y), color, time);
+			Debug.DrawLine(posB, posB, Color.red, time);
+		}
+
+		public static void DrawCircle(Vector2 position, float radius, int resolution, Color color)
+		{
+			for (float num = 0f; num < (float)resolution; num += 1f)
+			{
+				Vector2 v = position + new Vector2(Mathf.Cos(num / (float)resolution * 3.14159274f * 2f), Mathf.Sin(num / (float)resolution * 3.14159274f * 2f)) * radius;
+				Vector2 v2 = position + new Vector2(Mathf.Cos((num + 1f) / (float)resolution * 3.14159274f * 2f), Mathf.Sin((num + 1f) / (float)resolution * 3.14159274f * 2f)) * radius;
+				Debug.DrawLine(v, v2, color);
+			}
+		}
+
+		public static Vector3 CameraRelativePosition(float fieldOfView, Vector3 posPixel)
+		{
+			Vector2 vector = new Vector2((posPixel.x - (float)(Screen.width / 2)) / (float)Screen.height, (posPixel.y - (float)(Screen.height / 2)) / (float)Screen.height);
+			float f = fieldOfView * 0.0174532924f;
+			float num = Mathf.Sin(f) / ((1f + Mathf.Cos(f)) * 0.5f);
+			return new Vector3(vector.x * posPixel.z * num, vector.y * posPixel.z * num, posPixel.z);
+		}
+
+		public static Vector2 RotateZ(Vector2 a, float b)
+		{
+			float num = Mathf.Cos(b);
+			float num2 = Mathf.Sin(b);
+			return new Vector2(a.x * num - a.y * num2, a.x * num2 + a.y * num);
 		}
 	}
 }

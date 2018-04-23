@@ -1,65 +1,12 @@
-using NewBuildSystem;
-using System;
+﻿using System;
 using System.Collections;
-using System.Diagnostics;
+using System.Collections.Generic;
+using NewBuildSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class InputController : global::Touch
 {
-	[Serializable]
-	public class UIColliders
-	{
-		public string grupName;
-
-		public BoxCollider2D[] colliders;
-	}
-
-	[Header("Input Controller"), Space(6f)]
-	public CanvasScaler canvasScaler;
-
-	[Space]
-	public LayerMask maskPartHibox;
-
-	[Space]
-	public InputController.UIColliders[] uIColliders;
-
-	[Space, Space]
-	public float horizontalAxis;
-
-	public Transform leftArrow;
-
-	public Transform rightArrow;
-
-	public GameObject switchToButton;
-
-	public GameObject destroyButton;
-
-	public GameObject recoverButton;
-
-	public GameObject recoverMenuHolder;
-
-	public GameObject instructionsPartsHolder;
-
-	public GameObject instructionToggleThrottleHolder;
-
-	public GameObject instructionSlideThrottleHolder;
-
-	public GameObject instructionsMap;
-
-	public GameObject instructionsTimewarp;
-
-	public GameObject menuHolder;
-
-	[Space]
-	public AudioSource clickSound;
-
-	public AudioListener audioListener;
-
-	private Vector3 oldPos;
-
-	public Soundtrack soundtrackController;
-
 	private void Start()
 	{
 		this.SetFps();
@@ -67,17 +14,22 @@ public class InputController : global::Touch
 		this.SetEnableSound();
 		Screen.sleepTimeout = -1;
 		Ref.SceneType currentScene = Ref.currentScene;
-		if (currentScene != Ref.SceneType.MainMenu)
+		bool flag = currentScene > Ref.SceneType.MainMenu;
+		if (flag)
 		{
-			if (currentScene != Ref.SceneType.Build)
+			bool flag2 = currentScene != Ref.SceneType.Build;
+			if (flag2)
 			{
-				if (currentScene == Ref.SceneType.Game)
+				bool flag3 = currentScene == Ref.SceneType.Game;
+				if (flag3)
 				{
 					Screen.orientation = ((!Saving.LoadSetting(Saving.SettingKey.disableAutoRotate)) ? ScreenOrientation.AutoRotation : ScreenOrientation.Portrait);
-					if (Ref.lastScene == Ref.SceneType.Build)
+					bool flag4 = Ref.lastScene == Ref.SceneType.Build;
+					if (flag4)
 					{
 						this.instructionToggleThrottleHolder.SetActive(true);
-						if (!Saving.LoadSetting(Saving.SettingKey.seenGameInstructions))
+						bool flag5 = !Saving.LoadSetting(Saving.SettingKey.seenGameInstructions);
+						if (flag5)
 						{
 							this.instructionsPartsHolder.SetActive(true);
 							this.instructionSlideThrottleHolder.SetActive(true);
@@ -103,13 +55,13 @@ public class InputController : global::Touch
 
 	public void SetEnableMusic()
 	{
-		if (this.soundtrackController == null)
+		bool flag = this.soundtrackController == null;
+		if (!flag)
 		{
-			return;
+			this.soundtrackController.gameObject.SetActive(!Saving.LoadSetting(Saving.SettingKey.disableMusic));
+			this.soundtrackController.CancelInvoke();
+			this.soundtrackController.SelectRandomSoundtrack();
 		}
-		this.soundtrackController.gameObject.SetActive(!Saving.LoadSetting(Saving.SettingKey.disableMusic));
-		this.soundtrackController.CancelInvoke();
-		this.soundtrackController.SelectRandomSoundtrack();
 	}
 
 	public void SetEnableSound()
@@ -119,59 +71,76 @@ public class InputController : global::Touch
 
 	public void CheckAllInstructions()
 	{
-		if (this.instructionsPartsHolder.activeSelf || this.instructionSlideThrottleHolder.activeSelf || this.instructionToggleThrottleHolder.activeSelf)
+		bool flag = this.instructionsPartsHolder.activeSelf || this.instructionSlideThrottleHolder.activeSelf || this.instructionToggleThrottleHolder.activeSelf;
+		if (!flag)
 		{
-			return;
+			MonoBehaviour.print("Seen all instructions");
+			Saving.SaveSetting(Saving.SettingKey.seenGameInstructions, true);
 		}
-		MonoBehaviour.print("Seen all instructions");
-		Saving.SaveSetting(Saving.SettingKey.seenGameInstructions, true);
 	}
 
 	private void LateUpdate()
 	{
-		if (Input.mouseScrollDelta.y != 0f)
+		bool flag = Input.mouseScrollDelta.y != 0f;
+		if (flag)
 		{
-			this.ApplyZoom(1f - Input.mouseScrollDelta.y / 10f);
+			this.ApplyZoom(1f - Input.mouseScrollDelta.y / 5f);
 		}
 		this.horizontalAxis = Input.GetAxisRaw("Horizontal");
 		Vector2 posWorld = base.PixelPosToWorldPos(Input.mousePosition);
-		if (Input.GetMouseButtonDown(0))
+		bool mouseButtonDown = Input.GetMouseButtonDown(0);
+		if (mouseButtonDown)
 		{
 			this.StartTouchEmpty(posWorld, 0);
 			this.oldPos = Input.mousePosition;
 		}
-		if ((Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1)) && !this.ClickUI(Input.mousePosition))
+		bool flag2 = (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1)) && !this.ClickUI(Input.mousePosition);
+		if (flag2)
 		{
 			this.EndTouchEmpty(posWorld, 0, true);
 		}
-		if (Input.GetKey("q"))
+		bool key = Input.GetKey("q");
+		if (key)
 		{
-			this.ApplyZoom(1.015f);
+			this.ApplyZoom(1.02f);
 		}
-		if (Input.GetMouseButton(0))
+		bool key2 = Input.GetKey("e");
+		if (key2)
+		{
+			this.ApplyZoom(0.98f);
+		}
+		bool mouseButton = Input.GetMouseButton(0);
+		if (mouseButton)
 		{
 			this.TouchStayEmpty(posWorld, this.oldPos - Input.mousePosition, 0);
-			if (Ref.mapView && !Input.GetMouseButtonDown(0))
+			bool flag3 = !Input.GetMouseButtonDown(0);
+			if (flag3)
 			{
 				this.ApplyDraging(Double3.ToDouble3(this.oldPos - Input.mousePosition));
 			}
 			this.oldPos = Input.mousePosition;
 		}
 		float num = (float)((Screen.height <= Screen.width) ? 1334 : 750);
-		if (this.canvasScaler.referenceResolution.x != num)
+		bool flag4 = this.canvasScalers[0].referenceResolution.x != num;
+		if (flag4)
 		{
-			if (Ref.currentScene == Ref.SceneType.MainMenu)
+			bool flag5 = Ref.currentScene == Ref.SceneType.MainMenu;
+			if (!flag5)
 			{
-				return;
-			}
-			this.canvasScaler.referenceResolution = new Vector2(num, 1f);
-			if (Ref.currentScene == Ref.SceneType.Game && this.recoverMenuHolder.activeSelf)
-			{
-				Ref.controller.StartRecovery();
-			}
-			if (Ref.saving != null && Ref.saving.loadingMenuHolder.activeSelf)
-			{
-				Ref.saving.TryStartLoadProcess();
+				for (int i = 0; i < this.canvasScalers.Length; i++)
+				{
+					this.canvasScalers[i].referenceResolution = new Vector2(num, 1f);
+				}
+				bool flag6 = Ref.currentScene == Ref.SceneType.Game && this.recoverMenuHolder.activeSelf;
+				if (flag6)
+				{
+					Ref.controller.StartRecovery();
+				}
+				bool flag7 = Ref.saving != null && Ref.saving.loadingMenuHolder.activeSelf;
+				if (flag7)
+				{
+					Ref.saving.TryStartLoadProcess();
+				}
 			}
 		}
 	}
@@ -185,11 +154,14 @@ public class InputController : global::Touch
 	public void StartTouchEmpty(Vector2 posWorld, int fingerId)
 	{
 		Ref.SceneType currentScene = Ref.currentScene;
-		if (currentScene != Ref.SceneType.MainMenu)
+		bool flag = currentScene > Ref.SceneType.MainMenu;
+		if (flag)
 		{
-			if (currentScene != Ref.SceneType.Build)
+			bool flag2 = currentScene != Ref.SceneType.Build;
+			if (flag2)
 			{
-				if (currentScene != Ref.SceneType.Game)
+				bool flag3 = currentScene != Ref.SceneType.Game;
+				if (flag3)
 				{
 				}
 			}
@@ -203,11 +175,14 @@ public class InputController : global::Touch
 	public void TouchStayEmpty(Vector2 posWorld, Vector2 deltaPixel, int fingerId)
 	{
 		Ref.SceneType currentScene = Ref.currentScene;
-		if (currentScene != Ref.SceneType.MainMenu)
+		bool flag = currentScene > Ref.SceneType.MainMenu;
+		if (flag)
 		{
-			if (currentScene != Ref.SceneType.Build)
+			bool flag2 = currentScene != Ref.SceneType.Build;
+			if (flag2)
 			{
-				if (currentScene != Ref.SceneType.Game)
+				bool flag3 = currentScene != Ref.SceneType.Game;
+				if (flag3)
 				{
 				}
 			}
@@ -221,11 +196,14 @@ public class InputController : global::Touch
 	public void EndTouchEmpty(Vector2 posWorld, int fingerId, bool click)
 	{
 		Ref.SceneType currentScene = Ref.currentScene;
-		if (currentScene != Ref.SceneType.MainMenu)
+		bool flag = currentScene > Ref.SceneType.MainMenu;
+		if (flag)
 		{
-			if (currentScene != Ref.SceneType.Build)
+			bool flag2 = currentScene != Ref.SceneType.Build;
+			if (flag2)
 			{
-				if (currentScene == Ref.SceneType.Game)
+				bool flag3 = currentScene == Ref.SceneType.Game;
+				if (flag3)
 				{
 					if (click)
 					{
@@ -242,81 +220,106 @@ public class InputController : global::Touch
 
 	public bool ClickUI(Vector2 clickPosPixel)
 	{
-		if (Build.main != null)
+		bool flag = Build.main != null;
+		if (flag)
 		{
 			Build.main.OnClickUI(clickPosPixel);
 		}
 		GameObject gameObject = this.PointCastUI(clickPosPixel, this.uIColliders);
-		if (gameObject == null)
+		bool flag2 = gameObject == null;
+		bool result;
+		if (flag2)
 		{
-			return false;
+			result = false;
 		}
-		base.StartCoroutine(this.ClickGlow(gameObject.transform.GetChild(0).gameObject));
-		CustomEvent component = gameObject.GetComponent<CustomEvent>();
-		if (component != null)
+		else
 		{
-			component.customEvent.Invoke();
-			return true;
-		}
-		string name = gameObject.name;
-		if (name != null)
-		{
-			if (!(name == "Recover Vessel Button"))
+			base.StartCoroutine(this.ClickGlow(gameObject.transform.GetChild(0).gameObject));
+			CustomEvent component = gameObject.GetComponent<CustomEvent>();
+			bool flag3 = component != null;
+			if (flag3)
 			{
-				if (!(name == "Cancel Recovery Button"))
+				component.customEvent.Invoke();
+				result = true;
+			}
+			else
+			{
+				string name = gameObject.name;
+				bool flag4 = name != null;
+				if (flag4)
 				{
-					if (!(name == "Complete Mission Button"))
+					bool flag5 = !(name == "Recover Vessel Button");
+					if (flag5)
 					{
-						if (!(name == "LOADING Menu Holder"))
+						bool flag6 = !(name == "Cancel Recovery Button");
+						if (flag6)
 						{
-							if (name == "Keyboard")
+							bool flag7 = !(name == "Complete Mission Button");
+							if (flag7)
 							{
-								Ref.saving.OnKeyboardClick(clickPosPixel);
+								bool flag8 = !(name == "LOADING Menu Holder");
+								if (flag8)
+								{
+									bool flag9 = name == "Keyboard";
+									if (flag9)
+									{
+										Ref.saving.OnKeyboardClick(clickPosPixel);
+									}
+								}
+								else
+								{
+									this.PlayClickSound(0.2f);
+									Ref.saving.TrySelectLoad(clickPosPixel);
+								}
+							}
+							else
+							{
+								this.PlayClickSound(0.6f);
+								Ref.controller.Invoke("CompleteRecovery", (!Ref.mapView) ? 0.35f : 0.1f);
 							}
 						}
 						else
 						{
-							this.PlayClickSound(0.2f);
-							Ref.saving.TrySelectLoad(clickPosPixel);
+							this.PlayClickSound(0.6f);
+							Ref.controller.Invoke("CancelRecovery", 0.1f);
 						}
 					}
 					else
 					{
 						this.PlayClickSound(0.6f);
-						Ref.controller.Invoke("CompleteRecovery", (!Ref.mapView) ? 0.35f : 0.1f);
+						Ref.controller.Invoke("StartRecovery", 0.1f);
 					}
 				}
-				else
-				{
-					this.PlayClickSound(0.6f);
-					Ref.controller.Invoke("CancelRecovery", 0.1f);
-				}
-			}
-			else
-			{
-				this.PlayClickSound(0.6f);
-				Ref.controller.Invoke("StartRecovery", 0.1f);
+				result = true;
 			}
 		}
-		return true;
+		return result;
 	}
 
 	private void ClickEmpty(Vector2 clickPosWorld)
 	{
 		Ref.SceneType currentScene = Ref.currentScene;
-		if (currentScene != Ref.SceneType.MainMenu)
+		bool flag = currentScene > Ref.SceneType.MainMenu;
+		if (flag)
 		{
-			if (currentScene != Ref.SceneType.Build)
+			bool flag2 = currentScene != Ref.SceneType.Build;
+			if (flag2)
 			{
-				if (currentScene == Ref.SceneType.Game)
+				bool flag3 = currentScene == Ref.SceneType.Game;
+				if (flag3)
 				{
-					if (Ref.mapView)
+					bool mapView = Ref.mapView;
+					if (mapView)
 					{
 						Ref.map.OnClickEmpty(clickPosWorld);
 					}
-					else if (Ref.mainVessel != null)
+					else
 					{
-						this.PointCastParts(clickPosWorld);
+						bool flag4 = Ref.mainVessel != null;
+						if (flag4)
+						{
+							this.PointCastParts(clickPosWorld);
+						}
 					}
 				}
 			}
@@ -325,11 +328,11 @@ public class InputController : global::Touch
 
 	public GameObject PointCastUI(Vector2 clickPosPixel, InputController.UIColliders[] colliders)
 	{
-		for (int i = 0; i < colliders.Length; i++)
+		foreach (InputController.UIColliders uicolliders in colliders)
 		{
-			InputController.UIColliders uIColliders = colliders[i];
-			GameObject gameObject = this.PointCastUI(clickPosPixel, uIColliders.colliders);
-			if (gameObject != null)
+			GameObject gameObject = this.PointCastUI(clickPosPixel, uicolliders.colliders);
+			bool flag = gameObject != null;
+			if (flag)
 			{
 				return gameObject;
 			}
@@ -341,15 +344,16 @@ public class InputController : global::Touch
 	{
 		float num = (float)((Screen.height <= Screen.width) ? 1334 : 750);
 		float d = (float)Screen.width / num;
-		for (int i = 0; i < colliders.Length; i++)
+		foreach (BoxCollider2D boxCollider2D in colliders)
 		{
-			BoxCollider2D boxCollider2D = colliders[i];
-			if (boxCollider2D.gameObject.activeInHierarchy)
+			bool activeInHierarchy = boxCollider2D.gameObject.activeInHierarchy;
+			if (activeInHierarchy)
 			{
-				Vector2 a = boxCollider2D.GetComponent<RectTransform>().position + (Vector3)boxCollider2D.offset * d;
+				Vector2 a = (Vector2)boxCollider2D.GetComponent<RectTransform>().position + boxCollider2D.offset * d;
 				Vector2 vector = a - boxCollider2D.size * 0.5f * d;
 				Vector2 vector2 = a + boxCollider2D.size * 0.5f * d;
-				if (clickPosPixel.x >= vector.x && clickPosPixel.y >= vector.y && clickPosPixel.x <= vector2.x && clickPosPixel.y <= vector2.y)
+				bool flag = clickPosPixel.x >= vector.x && clickPosPixel.y >= vector.y && clickPosPixel.x <= vector2.x && clickPosPixel.y <= vector2.y;
+				if (flag)
 				{
 					return boxCollider2D.gameObject;
 				}
@@ -360,50 +364,60 @@ public class InputController : global::Touch
 
 	private void PointCastParts(Vector2 clickPos)
 	{
-		RaycastHit2D[] array = Physics2D.RaycastAll(clickPos, Vector2.up, 0.01f, this.maskPartHibox);
-		if (array.Length > 0)
+		List<RaycastHit2D> list = new List<RaycastHit2D>(Physics2D.RaycastAll(clickPos, Vector2.up, 0.01f, this.maskPartHibox));
+		bool flag = list.Count == 0;
+		if (!flag)
 		{
-			Transform transform = null;
-			for (int i = 0; i < array.Length; i++)
-			{
-				transform = array[i].collider.transform.parent;
-				if (array[i].collider.tag == "Priority")
-				{
-					break;
-				}
-			}
+			Transform transform = this.GetTopPart(list);
 			while (transform.GetComponent<Part>() == null)
 			{
 				transform = transform.parent;
 			}
 			Part component = transform.GetComponent<Part>();
-			if (component.vessel == Ref.mainVessel)
+			bool flag2 = component.vessel != Ref.mainVessel;
+			if (flag2)
 			{
-				if (Ref.mainVessel.controlAuthority)
+				Ref.controller.ShowMsg("Cannot use a part on a rocket that you are not controlling");
+			}
+			else
+			{
+				bool flag3 = !Ref.mainVessel.controlAuthority;
+				if (flag3)
+				{
+					Ref.controller.ShowMsg("No control");
+				}
+				else
 				{
 					component.UsePart();
-					if (component.HasEngineModule() && Ref.inputController.instructionsPartsHolder.activeSelf)
+					bool flag4 = Ref.inputController.instructionsPartsHolder.activeSelf && component.HasEngineModule();
+					if (flag4)
 					{
 						Ref.inputController.instructionsPartsHolder.SetActive(false);
 						Ref.inputController.CheckAllInstructions();
 					}
 				}
-				else
-				{
-					Ref.controller.ShowMsg("No control");
-				}
-			}
-			else
-			{
-				Ref.controller.ShowMsg("Cannot use a part on a rocket that you are not controlling");
 			}
 		}
+	}
+
+	private Transform GetTopPart(List<RaycastHit2D> hitParts)
+	{
+		Transform transform = hitParts[0].collider.transform;
+		for (int i = 0; i < hitParts.Count; i++)
+		{
+			bool flag = hitParts[i].collider.transform.localPosition.z > transform.transform.localPosition.z;
+			if (flag)
+			{
+				transform = hitParts[i].collider.transform;
+			}
+		}
+		return transform;
 	}
 
 	public void ToggleDropdownMenu()
 	{
 		Transform child = this.menuHolder.transform.parent.GetChild(this.menuHolder.transform.GetSiblingIndex() - 1);
-		child.GetComponent<MoveModule>().SetTargetTime((child.GetComponent<MoveModule>().targetTime.floatValue != 0f) ? 0f : 1.2f);
+		child.GetComponent<MoveModule>().SetTargetTime((child.GetComponent<MoveModule>().targetTime.floatValue != 0f) ? 0f : 1.4f);
 	}
 
 	public void CloseDropdownMenu()
@@ -414,9 +428,11 @@ public class InputController : global::Touch
 
 	public void ApplyZoom(float zoomDelta)
 	{
-		if (Ref.currentScene == Ref.SceneType.Game)
+		bool flag = Ref.currentScene == Ref.SceneType.Game;
+		if (flag)
 		{
-			if (Ref.mapView)
+			bool mapView = Ref.mapView;
+			if (mapView)
 			{
 				Ref.map.UpdateMapZoom(-Ref.map.mapPosition.z * (double)zoomDelta);
 			}
@@ -426,7 +442,8 @@ public class InputController : global::Touch
 				Ref.planetManager.UpdateAtmosphereFade();
 			}
 		}
-		if (Ref.currentScene == Ref.SceneType.Build)
+		bool flag2 = Ref.currentScene == Ref.SceneType.Build;
+		if (flag2)
 		{
 			Build.main.MoveCamera(new Vector3(0f, 0f, (1f - zoomDelta) * 1.2f));
 		}
@@ -434,24 +451,118 @@ public class InputController : global::Touch
 
 	public void ApplyDraging(Double3 posDeltaPixel)
 	{
-		if (Ref.currentScene == Ref.SceneType.Game)
+		bool flag = Ref.currentScene == Ref.SceneType.Game;
+		if (flag)
 		{
-			double num = (double)Mathf.Cos(Ref.cam.transform.eulerAngles.z * 0.0174532924f);
-			double num2 = (double)Mathf.Sin(Ref.cam.transform.eulerAngles.z * 0.0174532924f);
-			float f = Ref.cam.fieldOfView * 0.0174532924f;
-			float num3 = Mathf.Sin(f) / ((1f + Mathf.Cos(f)) * 0.5f);
-			Ref.map.UpdateMapPosition(Ref.map.mapPosition + new Double3(posDeltaPixel.x * num - posDeltaPixel.y * num2, posDeltaPixel.x * num2 + posDeltaPixel.y * num) * -Ref.map.mapPosition.z / (double)Screen.height * (double)num3);
+			bool mapView = Ref.mapView;
+			if (mapView)
+			{
+				double num = (double)Mathf.Cos(Ref.cam.transform.eulerAngles.z * 0.0174532924f);
+				double num2 = (double)Mathf.Sin(Ref.cam.transform.eulerAngles.z * 0.0174532924f);
+				float f = Ref.cam.fieldOfView * 0.0174532924f;
+				float num3 = Mathf.Sin(f) / ((1f + Mathf.Cos(f)) * 0.5f);
+				Ref.map.UpdateMapPosition(Ref.map.mapPosition + new Double3(posDeltaPixel.x * num - posDeltaPixel.y * num2, posDeltaPixel.x * num2 + posDeltaPixel.y * num) * -Ref.map.mapPosition.z / (double)Screen.height * (double)num3);
+			}
+			else
+			{
+				float num4 = Mathf.Cos(Ref.cam.transform.eulerAngles.z * 0.0174532924f);
+				float num5 = Mathf.Sin(Ref.cam.transform.eulerAngles.z * 0.0174532924f);
+				float f2 = Ref.cam.fieldOfView * 0.0174532924f;
+				float d = Mathf.Sin(f2) / ((1f + Mathf.Cos(f2)) * 0.5f);
+				Ref.controller.viewPositons += new Vector2((float)posDeltaPixel.x * num4 - (float)posDeltaPixel.y * num5, (float)posDeltaPixel.x * num5 + (float)posDeltaPixel.y * num4) * Ref.controller.cameraDistanceGame / (float)Screen.height * d;
+				bool flag2 = Ref.controller.viewPositons.sqrMagnitude > 2500f;
+				if (flag2)
+				{
+					Ref.controller.viewPositons /= Ref.controller.viewPositons.magnitude / 50f;
+				}
+			}
 		}
 	}
 
-	[DebuggerHidden]
 	public IEnumerator ClickGlow(GameObject glow)
 	{
-        if (glow.name == "Glow")
-        {
-            glow.SetActive(true);
-            yield return new WaitForSeconds(0.2f);
-            glow.SetActive(false);
-        }
-    }
+		bool flag = glow.name == "Glow";
+		if (flag)
+		{
+			glow.SetActive(true);
+			yield return new WaitForSeconds(0.2f);
+			glow.SetActive(false);
+		}
+		yield break;
+	}
+
+	public InputController()
+	{
+	}
+
+	[Header("Input Controller")]
+	[Space(6f)]
+	public CanvasScaler[] canvasScalers;
+
+	[Space]
+	public LayerMask maskPartHibox;
+
+	[Space]
+	public InputController.UIColliders[] uIColliders;
+
+	[Space]
+	[Space]
+	public float horizontalAxis;
+
+	public Vector2 rcsInput;
+
+	public Transform leftArrow;
+
+	public Transform rightArrow;
+
+	public Transform up;
+
+	public Transform down;
+
+	public Transform left;
+
+	public Transform right;
+
+	public GameObject switchToButton;
+
+	public GameObject destroyButton;
+
+	public GameObject recoverButton;
+
+	public GameObject recoverMenuHolder;
+
+	public GameObject instructionsPartsHolder;
+
+	public GameObject instructionToggleThrottleHolder;
+
+	public GameObject instructionSlideThrottleHolder;
+
+	public GameObject instructionsMap;
+
+	public GameObject instructionsTimewarp;
+
+	public GameObject menuHolder;
+
+	public GameObject rcsInputsHolder;
+
+	[Space]
+	public AudioSource clickSound;
+
+	public AudioListener audioListener;
+
+	private Vector3 oldPos;
+
+	public Soundtrack soundtrackController;
+
+	[Serializable]
+	public class UIColliders
+	{
+		public UIColliders()
+		{
+		}
+
+		public string grupName;
+
+		public BoxCollider2D[] colliders;
+	}
 }

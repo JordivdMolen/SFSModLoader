@@ -1,103 +1,248 @@
+﻿using System;
+using System.Collections.Generic;
 using NewBuildSystem;
 using Sirenix.OdinInspector;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PartsManager : MonoBehaviour
 {
-	public List<Part> parts;
-
-	public bool partToPartDamage = true;
-
-	public Rigidbody2D rb2d;
-
-	[BoxGroup]
-	public float torque;
-
-	[FoldoutGroup("Modules", 0)]
-	public List<ControlModule> controlModules;
-
-	[FoldoutGroup("Modules", 0)]
-	public List<EngineModule> engineModules;
-
-	[FoldoutGroup("Modules", 0)]
-	public List<TorqueModule> torqueModules;
-
-	[FoldoutGroup("Modules", 0)]
-	public List<ResourceModule.Grup> resourceGrups;
-
 	public void ApplyThrustForce(float engineGimbal, Vessel.Throttle throttle, Vessel vessel)
 	{
-		if (Ref.mainVessel == vessel && Ref.mainVesselTerrainHeight < 20.0 && (!throttle.throttleOn || throttle.throttleRaw == 0f))
+		bool flag = Ref.mainVessel == vessel && Ref.mainVesselTerrainHeight < 20.0 && (!throttle.throttleOn || throttle.throttleRaw == 0f);
+		if (flag)
 		{
 			engineGimbal = 0f;
 		}
 		float num = 0f;
 		for (int i = 0; i < this.engineModules.Count; i++)
 		{
-			this.engineModules[i].ApplyThrust(ref num, this.rb2d, (!this.engineModules[i].engineOn.boolValue) ? 0f : engineGimbal, throttle);
+			this.engineModules[i].ApplyThrust(ref num, this.rb2d, (!this.engineModules[i].engineOn.boolValue) ? 0f : engineGimbal, throttle, Ref.mainVessel == vessel);
 		}
-		if (num == 0f)
+		bool flag2 = num == 0f;
+		if (!flag2)
 		{
-			return;
+			bool flag3 = vessel == Ref.mainVessel;
+			if (flag3)
+			{
+				Ref.controller.cameraOffset = num * 1.5E-05f * UnityEngine.Random.insideUnitCircle;
+			}
 		}
-		Ref.controller.cameraOffset = num * 1.5E-05f * UnityEngine.Random.insideUnitCircle;
 	}
 
 	public void ApplyDragForce(CelestialBodyData planet, Double3 posToPlanet)
 	{
-		if (!planet.atmosphereData.hasAtmosphere)
+		bool flag = !planet.atmosphereData.hasAtmosphere;
+		if (!flag)
 		{
-			return;
+			Double3 @double = Ref.velocityOffset + this.rb2d.velocity;
+			bool flag2 = 1.0 > @double.sqrMagnitude;
+			if (!flag2)
+			{
+				double num = posToPlanet.magnitude2d - planet.radius;
+				bool flag3 = num > planet.atmosphereData.atmosphereHeightM;
+				if (!flag3)
+				{
+					double d = Math.Exp(-(num / planet.atmosphereData.atmosphereHeightM) * planet.atmosphereData.atmoCurvePow) * planet.atmosphereData.atmoDensity;
+					float d2 = 0f;
+					Vector2 vector = Vector2.zero;
+					float velocityAngle = Mathf.Atan2((float)@double.y, (float)@double.x);
+					float rot = (this.rb2d.rotation + 90f) * 0.0174532924f;
+					for (int i = 0; i < this.parts.Count; i++)
+					{
+						this.parts[i].GetDrag(velocityAngle, rot, ref d2, ref vector);
+					}
+					vector /= d2;
+					bool flag4 = float.IsNaN(vector.x);
+					if (!flag4)
+					{
+						this.rb2d.AddForceAtPosition(-(@double.normalized2d * @double.sqrMagnitude * d).toVector2 * d2, this.rb2d.GetRelativePoint(vector));
+					}
+				}
+			}
 		}
-		double num = posToPlanet.magnitude2d - planet.radius;
-		if (num > planet.atmosphereData.atmosphereHeightM)
-		{
-			return;
-		}
-		Double3 @double = Ref.velocityOffset + this.rb2d.velocity;
-		double d = Math.Exp(-(num / planet.atmosphereData.atmosphereHeightM) * planet.atmosphereData.atmoCurvePow) * planet.atmosphereData.atmoDensity;
-		float d2 = 0f;
-		Vector2 vector = Vector2.zero;
-		float velocityAngle = Mathf.Atan2((float)@double.y, (float)@double.x);
-		float rot = (this.rb2d.rotation + 90f) * 0.0174532924f;
-		for (int i = 0; i < this.parts.Count; i++)
-		{
-			this.parts[i].GetDrag(velocityAngle, rot, ref d2, ref vector);
-		}
-		vector /= d2;
-		if (float.IsNaN(vector.x))
-		{
-			return;
-		}
-		this.rb2d.AddForceAtPosition(-(@double.normalized2d * @double.sqrMagnitude * d).toVector2 * d2, this.rb2d.GetRelativePoint(vector));
 	}
 
 	public void ApplyTorqueForce(bool controlAuthority, ref float horizontalAxis, Vessel vessel)
 	{
-		if (this.torque <= 0f)
+		bool flag = this.torque <= 0f;
+		if (!flag)
 		{
-			return;
-		}
-		if (!controlAuthority)
-		{
-			if (Ref.mainVessel == vessel && Ref.inputController.horizontalAxis != 0f && Ref.controller.msgUI.color.a < 0.6f)
+			bool flag2 = !controlAuthority;
+			if (flag2)
 			{
-				Ref.controller.ShowMsg("No control");
+				bool flag3 = Ref.mainVessel == vessel && Ref.inputController.horizontalAxis != 0f && Ref.controller.msgUI.color.a < 0.6f;
+				if (flag3)
+				{
+					Ref.controller.ShowMsg("No control");
+				}
+				horizontalAxis = 0f;
 			}
-			horizontalAxis = 0f;
-			return;
+			else
+			{
+				float num = this.torque / this.rb2d.mass / Time.fixedDeltaTime;
+				bool flag4 = Ref.mainVessel == vessel && Ref.inputController.horizontalAxis != 0f;
+				if (flag4)
+				{
+					horizontalAxis = Ref.inputController.horizontalAxis;
+					this.rb2d.angularVelocity -= num * Ref.inputController.horizontalAxis * Time.fixedDeltaTime;
+				}
+				else
+				{
+					horizontalAxis = Mathf.Clamp(this.rb2d.angularVelocity / (num * Time.fixedDeltaTime), -1f, 1f);
+					this.rb2d.angularVelocity -= num * horizontalAxis * Time.fixedDeltaTime;
+				}
+			}
 		}
-		float num = this.torque / this.rb2d.mass / Time.fixedDeltaTime;
-		if (Ref.mainVessel == vessel && Ref.inputController.horizontalAxis != 0f)
+	}
+
+	public void ApplyRcs(Vessel vessel, float horizontalAxis, float rcsInputDirection, bool directionInput)
+	{
+		bool flag = this.rcsModules.Count == 0;
+		if (flag)
 		{
-			horizontalAxis = Ref.inputController.horizontalAxis;
-			this.rb2d.angularVelocity -= num * Ref.inputController.horizontalAxis * Time.fixedDeltaTime;
-			return;
+			vessel.RCS = false;
 		}
-		horizontalAxis = Mathf.Clamp(this.rb2d.angularVelocity / (num * Time.fixedDeltaTime), -1f, 1f);
-		this.rb2d.angularVelocity -= num * horizontalAxis * Time.fixedDeltaTime;
+		else
+		{
+			bool flag2 = !this.HasFuelSourceForRcs(vessel, false);
+			if (flag2)
+			{
+				for (int i = 0; i < this.rcsModules.Count; i++)
+				{
+					this.rcsModules[i].effect.SetTargetTime(0f);
+				}
+				vessel.RCS = false;
+			}
+			else
+			{
+				float num = 0f;
+				for (int j = 0; j < this.rcsModules.Count; j++)
+				{
+					this.rcsModules[j].UseRcs(this.rb2d, vessel, horizontalAxis, rcsInputDirection, directionInput, ref num);
+				}
+				bool flag3 = num > 0f && !Ref.infiniteFuel;
+				if (flag3)
+				{
+					this.TakeFromAllFuelGrups(num);
+				}
+			}
+		}
+	}
+
+	public bool HasFuelSourceForRcs(Vessel vessel, bool forEnabling)
+	{
+		bool flag = this.HasFuelSource();
+		bool result;
+		if (flag)
+		{
+			result = true;
+		}
+		else
+		{
+			this.CreateFuelGrup();
+			bool flag2 = this.HasFuelSource();
+			if (flag2)
+			{
+				result = true;
+			}
+			else
+			{
+				bool flag3 = vessel == Ref.mainVessel;
+				if (flag3)
+				{
+					bool flag4 = this.resourceGrups.Count == 0;
+					if (flag4)
+					{
+						Ref.controller.ShowMsg((!forEnabling) ? "No fuel source, disabled RCS" : "No fuel source", 2f);
+					}
+					else
+					{
+						Ref.controller.ShowMsg("Out of fuel", 2f);
+					}
+				}
+				result = false;
+			}
+		}
+		return result;
+	}
+
+	public void ToggleRCS(Vessel vessel, bool showMsg)
+	{
+		bool flag = !vessel.RCS && !this.HasFuelSourceForRcs(vessel, true);
+		if (!flag)
+		{
+			vessel.RCS = !vessel.RCS;
+			bool flag2 = !vessel.RCS;
+			if (flag2)
+			{
+				for (int i = 0; i < this.rcsModules.Count; i++)
+				{
+					this.rcsModules[i].effect.SetTargetTime(0f);
+				}
+			}
+			if (showMsg)
+			{
+				Ref.controller.ShowMsg("RCS " + ((!vessel.RCS) ? "Off" : "On"));
+			}
+		}
+	}
+
+	private bool HasFuelSource()
+	{
+		for (int i = 0; i < this.resourceGrups.Count; i++)
+		{
+			bool canTakeResource = this.resourceGrups[i].canTakeResource;
+			if (canTakeResource)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void TakeFromAllFuelGrups(float removeAmount)
+	{
+		int num = 0;
+		for (int i = 0; i < this.resourceGrups.Count; i++)
+		{
+			bool canTakeResource = this.resourceGrups[i].canTakeResource;
+			if (canTakeResource)
+			{
+				num++;
+			}
+		}
+		for (int j = 0; j < this.resourceGrups.Count; j++)
+		{
+			bool canTakeResource2 = this.resourceGrups[j].canTakeResource;
+			if (canTakeResource2)
+			{
+				this.resourceGrups[j].TakeResource(removeAmount / (float)num);
+			}
+		}
+	}
+
+	private void CreateFuelGrup()
+	{
+		ResourceModule fuelTank = this.GetFuelTank();
+		bool flag = fuelTank == null;
+		if (!flag)
+		{
+			this.resourceGrups.Add(new ResourceModule.Grup(fuelTank));
+		}
+	}
+
+	private ResourceModule GetFuelTank()
+	{
+		for (int i = 0; i < this.parts.Count; i++)
+		{
+			ResourceModule resourceModule = this.parts[i].GetResourceModule();
+			bool flag = resourceModule != null && (this.resourceGrups.Count == 0 || resourceModule.resourceAmount.floatValue > 0f);
+			if (flag)
+			{
+				return resourceModule;
+			}
+		}
+		return null;
 	}
 
 	public void ReCenter()
@@ -110,7 +255,8 @@ public class PartsManager : MonoBehaviour
 	public void UpdatePartsGruping(bool disablePartToPartDamage, Vessel vessel)
 	{
 		bool flag = this.parts.Count > 0 && this.parts[0] != null && this.parts[0].gameObject.activeSelf;
-		if (flag)
+		bool flag2 = flag;
+		if (flag2)
 		{
 			this.ResetsParts();
 			List<Part> list = new List<Part>(this.parts);
@@ -118,13 +264,15 @@ public class PartsManager : MonoBehaviour
 			List<Part> list2 = new List<Part>();
 			for (int i = 0; i < list.Count; i++)
 			{
-				if (list[i].vessel == null)
+				bool flag3 = list[i].vessel == null;
+				if (flag3)
 				{
 					list2.Add(list[i]);
 				}
 			}
 			List<Vessel> list3 = Ref.controller.CreateVesselsFromParts(list2, this.rb2d.velocity, this.rb2d.angularVelocity, vessel.throttle, vessel.vesselAchievements);
-			if (Ref.mainVessel == vessel)
+			bool flag4 = Ref.mainVessel == vessel;
+			if (flag4)
 			{
 				Ref.controller.RepositionFuelIcons();
 			}
@@ -155,6 +303,24 @@ public class PartsManager : MonoBehaviour
 		this.partToPartDamage = true;
 	}
 
+	public bool InsideFairing(Vector2 localPosition)
+	{
+		for (int i = 0; i < this.fairingModules.Count; i++)
+		{
+			for (int j = 0; j < this.fairingModules[i].part.partData.areas.Length; j++)
+			{
+				Vector2 vector = (Vector2)this.fairingModules[i].part.transform.localPosition + this.fairingModules[i].part.partData.areas[j].start * this.fairingModules[i].part.orientation;
+				Vector2 vector2 = vector + this.fairingModules[i].part.partData.areas[j].size * this.fairingModules[i].part.orientation;
+				bool flag = Utility.IsInsideRange(localPosition.x, vector.x, vector2.x, true) && Utility.IsInsideRange(localPosition.y, vector.y, vector2.y, true);
+				if (flag)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public void GetConnectedParts(Part startPart, Vessel vessel)
 	{
 		for (int i = 0; i < this.parts.Count; i++)
@@ -177,7 +343,8 @@ public class PartsManager : MonoBehaviour
 			for (int j = 0; j < list[0].joints.Count; j++)
 			{
 				Part part = (!(list[0].joints[j].fromPart == list[0])) ? list[0].joints[j].fromPart : list[0].joints[j].toPart;
-				if (part.vessel == null)
+				bool flag = part.vessel == null;
+				if (flag)
 				{
 					list.Add(part);
 					part.vessel = vessel;
@@ -196,7 +363,8 @@ public class PartsManager : MonoBehaviour
 	{
 		for (int i = 0; i < this.parts.Count; i++)
 		{
-			if (this.parts[i].GetComponent<ControlModule>() != null)
+			bool flag = this.parts[i].GetComponent<ControlModule>() != null;
+			if (flag)
 			{
 				return this.parts[i];
 			}
@@ -214,24 +382,51 @@ public class PartsManager : MonoBehaviour
 		return list;
 	}
 
-	private void SortModules(List<Module> modules, Vessel vessel)
+	public void SortModules(List<Module> modules, Vessel vessel)
 	{
 		this.controlModules.Clear();
 		this.torqueModules.Clear();
 		this.engineModules.Clear();
+		this.rcsModules.Clear();
+		this.fairingModules.Clear();
 		for (int i = 0; i < modules.Count; i++)
 		{
-			if (modules[i] is TorqueModule)
+			bool flag = modules[i] is TorqueModule;
+			if (flag)
 			{
 				this.torqueModules.Add(modules[i] as TorqueModule);
 			}
-			else if (modules[i] is EngineModule)
+			else
 			{
-				this.engineModules.Add(modules[i] as EngineModule);
-			}
-			else if (modules[i] is ControlModule)
-			{
-				this.controlModules.Add(modules[i] as ControlModule);
+				bool flag2 = modules[i] is EngineModule;
+				if (flag2)
+				{
+					this.engineModules.Add(modules[i] as EngineModule);
+				}
+				else
+				{
+					bool flag3 = modules[i] is ControlModule;
+					if (flag3)
+					{
+						this.controlModules.Add(modules[i] as ControlModule);
+					}
+					else
+					{
+						bool flag4 = modules[i] is RcsModule;
+						if (flag4)
+						{
+							this.rcsModules.Add(modules[i] as RcsModule);
+						}
+						else
+						{
+							bool flag5 = modules[i] is FairingModule;
+							if (flag5)
+							{
+								this.fairingModules.Add(modules[i] as FairingModule);
+							}
+						}
+					}
+				}
 			}
 		}
 		this.UpdateTorque();
@@ -240,16 +435,21 @@ public class PartsManager : MonoBehaviour
 
 	public void ResetsParts()
 	{
-		foreach (ResourceModule.Grup current in this.resourceGrups)
+		for (int i = 0; i < this.rcsModules.Count; i++)
 		{
-			current.DestroyGrup();
+			this.rcsModules[i].effect.SetTargetTime(0f);
+		}
+		foreach (ResourceModule.Grup grup in this.resourceGrups)
+		{
+			grup.DestroyGrup();
 		}
 		this.resourceGrups = new List<ResourceModule.Grup>();
-		foreach (Part current2 in this.parts)
+		foreach (Part part in this.parts)
 		{
-			if (current2.gameObject.activeSelf)
+			bool activeSelf = part.gameObject.activeSelf;
+			if (activeSelf)
 			{
-				current2.vessel = null;
+				part.vessel = null;
 			}
 		}
 	}
@@ -263,7 +463,8 @@ public class PartsManager : MonoBehaviour
 			num += this.parts[i].mass;
 			a += (this.parts[i].transform.localPosition + this.parts[i].centerOfMass * this.parts[i].orientation) * this.parts[i].mass;
 		}
-		if (float.IsNaN(num))
+		bool flag = float.IsNaN(num);
+		if (flag)
 		{
 			Debug.Log(base.name + "  " + this.parts.ToString());
 		}
@@ -279,4 +480,35 @@ public class PartsManager : MonoBehaviour
 			this.torque += this.torqueModules[i].torque.floatValue;
 		}
 	}
+
+	public PartsManager()
+	{
+	}
+
+	public List<Part> parts;
+
+	public bool partToPartDamage = true;
+
+	public Rigidbody2D rb2d;
+
+	[BoxGroup]
+	public float torque;
+
+	[FoldoutGroup("Modules", 0)]
+	public List<ControlModule> controlModules;
+
+	[FoldoutGroup("Modules", 0)]
+	public List<EngineModule> engineModules;
+
+	[FoldoutGroup("Modules", 0)]
+	public List<TorqueModule> torqueModules;
+
+	[FoldoutGroup("Modules", 0)]
+	public List<ResourceModule.Grup> resourceGrups;
+
+	[FoldoutGroup("Modules", 0)]
+	public List<RcsModule> rcsModules;
+
+	[FoldoutGroup("Modules", 0)]
+	public List<FairingModule> fairingModules;
 }

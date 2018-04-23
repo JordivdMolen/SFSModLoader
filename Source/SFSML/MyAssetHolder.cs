@@ -1,35 +1,54 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace SFSML
 {
-    public class MyAssetHolder
-    {
-        public AssetBundle ab;
+	public class MyAssetHolder
+	{
+		public MyAssetHolder(AssetBundle tgt)
+		{
+			this.ab = tgt;
+		}
 
-        public MyAssetHolder(AssetBundle tgt)
-        {
-            this.ab = tgt;
-        }
+		public T getAsset<T>(string name)
+		{
+			bool flag = this.ab == null;
+			T result;
+			if (flag)
+			{
+				result = default(T);
+			}
+			else
+			{
+				result = (T)((object)this.ab.LoadAsset(name, typeof(T)));
+			}
+			return result;
+		}
 
-        public T getAsset<T>(string name)
-        {
-            if (this.ab == null)
-                return default(T);
-            return (T) (object) ab.LoadAsset(name,typeof(T));
-        }
+		public T getInstanciated<T>(string name)
+		{
+			bool flag = this.ab == null;
+			T result;
+			if (flag)
+			{
+				result = default(T);
+			}
+			else
+			{
+				UnityEngine.Object @object = this.ab.LoadAsset(name, typeof(T));
+				bool flag2 = @object == null;
+				if (flag2)
+				{
+					result = default(T);
+				}
+				else
+				{
+					result = (T)((object)UnityEngine.Object.Instantiate(@object));
+				}
+			}
+			return result;
+		}
 
-        public T getInstanciated<T>(string name)
-        {
-            if (this.ab == null)
-                return default(T);
-            UnityEngine.Object o = ab.LoadAsset(name, typeof(T));
-            if (o == default(UnityEngine.Object)) return default(T);
-            return (T)(object)Ref.Instantiate(o);
-        }
-    }
-
-    
+		public AssetBundle ab;
+	}
 }

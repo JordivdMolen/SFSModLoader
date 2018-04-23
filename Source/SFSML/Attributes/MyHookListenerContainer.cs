@@ -2,11 +2,10 @@
 
 namespace SFSML.Attributes
 {
-    public class MyHookListenerContainer : Attribute
-    {
-        public MyHookListenerContainer()
-        {
-        }
-    }
+	public class MyHookListenerContainer : Attribute
+	{
+		public MyHookListenerContainer()
+		{
+		}
+	}
 }
-

@@ -1,16 +1,8 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 public class Ellipse : MonoBehaviour
 {
-	public float x = 5f;
-
-	public float y = 3f;
-
-	public int resolution;
-
-	public LineRenderer lr;
-
 	private void Start()
 	{
 		Vector3[] array = this.CreateEllipse(this.x, this.y, this.resolution);
@@ -34,4 +26,16 @@ public class Ellipse : MonoBehaviour
 		}
 		return array;
 	}
+
+	public Ellipse()
+	{
+	}
+
+	public float x = 5f;
+
+	public float y = 3f;
+
+	public int resolution;
+
+	public LineRenderer lr;
 }

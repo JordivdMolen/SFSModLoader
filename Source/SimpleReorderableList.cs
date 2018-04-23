@@ -1,5 +1,8 @@
-using System;
+﻿using System;
 
 public class SimpleReorderableList
 {
+	public SimpleReorderableList()
+	{
+	}
 }

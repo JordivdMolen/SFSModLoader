@@ -1,14 +1,11 @@
-using Sirenix.OdinInspector;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class GameEvent : ScriptableObject
 {
-	[ReadOnly]
-	public List<GameEventListener> eventListeners = new List<GameEventListener>();
-
-	[Button("Raise", ButtonSizes.Small)]
+	[Button("Raise", 0)]
 	public void Raise()
 	{
 		for (int i = this.eventListeners.Count - 1; i >= 0; i--)
@@ -19,7 +16,8 @@ public class GameEvent : ScriptableObject
 
 	public void RegisterListener(GameEventListener listener)
 	{
-		if (!this.eventListeners.Contains(listener))
+		bool flag = !this.eventListeners.Contains(listener);
+		if (flag)
 		{
 			this.eventListeners.Add(listener);
 		}
@@ -27,9 +25,17 @@ public class GameEvent : ScriptableObject
 
 	public void UnregisterListener(GameEventListener listener)
 	{
-		if (this.eventListeners.Contains(listener))
+		bool flag = this.eventListeners.Contains(listener);
+		if (flag)
 		{
 			this.eventListeners.Remove(listener);
 		}
 	}
+
+	public GameEvent()
+	{
+	}
+
+	[ReadOnly]
+	public List<GameEventListener> eventListeners = new List<GameEventListener>();
 }

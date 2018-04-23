@@ -1,335 +1,380 @@
-﻿/*
- * Created by SharpDevelop.
- * User: JordivdMolen
- * Date: 2/14/2018
- * Time: 10:06 PM
- * 
- * Using this file for commercial purposes can result
- * in violating the license!
- */
-using System;
-using System.Diagnostics;
-using System.IO;
-using UnityEngine;
-using System.Reflection;
-using SFSML.HookSystem;
-using SFSML.Exceptions;
-using SFSML.Attributes;
+﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.IO;
+using System.Reflection;
 using Assets.SFSML.Utility;
-using UnityEngine.Purchasing;
+using SFSML.Attributes;
+using SFSML.Enum;
+using SFSML.Exceptions;
 using SFSML.HookSystem.ReWork;
 using SFSML.HookSystem.ReWork.BaseHooks.UtilHooks;
-using SFSML.Enum;
+using SFSML.IO.Storable;
 using SFSML.Translation;
 using SFSML.Translation.Languages;
+using UnityEngine;
 
 namespace SFSML
 {
-    /// <summary>
-    /// The coreclass of SFSML.
-    /// </summary>
-    [MyModEntryPoint]
-    public class ModLoader
+	[MyModEntryPoint]
+	public class ModLoader
 	{
-        public static MyConsole mainConsole;
-
-		public int loadedMods = 0;
-        private Dictionary<string,MyMod> mods = new Dictionary<string, MyMod>();
-        private Canvas overlayObject = null;
-        public MyConsole myConsole;
-        /// <summary>
-        /// The main game manager to receive events and inputs.
-        /// This will receive all the NON-STATIC OBJECT hooks.
-        /// Things like the main entry point of the game will have their own hook manager!
-        /// </summary>
-
-        public static readonly string version = "1.0.0.R2";
-        private static string logTag = "ModLoader "+version;
-        public static MyTranslationController<ModLoaderLang> translation;
-        private GameObject overlay;
 		public ModLoader()
-        {
-            this.performDirCheck();
-            //Setup local/static fields
-            translation = new MyTranslationController<ModLoaderLang>(this.getMyDataDirectory(), "ModLoaderTranslations");
-            logTag = translation.autoFormat("@LogTag");
-            if (Application.platform == RuntimePlatform.WindowsPlayer)
-            {
-                this.myConsole = new MyConsole();
-                mainConsole = this.myConsole;
-            }
-            myConsole.tryLogCustom(String.Format(translation.autoFormat("@EntryMessage"),translation.autoFormat("@LoaderVersion")),logTag, LogType.Generic);
-
-            new MyHookListener((hook) =>
-            {
-                MyKeyDownHook keyHook = (MyKeyDownHook)hook;
-                if (keyHook.keyDown == KeyCode.F12)
-                {
-                    mainConsole.toggleConsole();
-                }
-                return hook;
-            }, typeof(MyKeyDownHook));
-        }
-
-       
-		
-		public void startLoadProcedure()
-        {
-            mainConsole.tryLogCustom("Initiating load procedure", logTag, LogType.Generic);
-
-            try
-            {
-                this.loadPriorityMods();
-            } catch (Exception e)
-            {
-                this.myConsole.logError(e);
-            }
-            try { 
-                this.loadMods();
-            }
-            catch (Exception e)
-            {
-                this.myConsole.logError(e);
-            }
-        }
-        
-        public string getMyBaseDirectory()
-        {
-		    return Path.Combine(Application.dataPath,"SFSML");
-        }
-
-        public string getMyModDirectory()
-        {
-		    return Path.Combine(Path.Combine(Application.dataPath,"SFSML"),"Mods");
-        }
-
-        public string getMyDataDirectory()
-        {
-		    return Path.Combine(Path.Combine(Application.dataPath,"SFSML"),"Data");
-        }
-
-        public string getMyDirectory(PathFinder path)
-        {
-            switch (path)
-            {
-                case PathFinder.MyDataDir:
-                    return this.getMyDataDirectory();
-                case PathFinder.MyModDir:
-                    return this.getMyModDirectory();
-                case PathFinder.MyNormalModDir:
-					return Path.Combine(this.getMyModDirectory(), "normal");
-                case PathFinder.MyPriorityModDir:
-                    return Path.Combine(this.getMyModDirectory(), "priority"); 
-            }
-            return null;
-        }
-
-        private void performDirCheck()
-        {
-            if (!Directory.Exists(this.getMyBaseDirectory()))
-            {
-                Directory.CreateDirectory(this.getMyBaseDirectory());
-                mainConsole.tryLogCustom("Created SFSML directory.", "DirChecker", LogType.Generic);
-            }
-            if (!Directory.Exists(this.getMyModDirectory()))
-            {
-                Directory.CreateDirectory(this.getMyModDirectory());
-                Directory.CreateDirectory(this.getMyDirectory(PathFinder.MyNormalModDir));
-                Directory.CreateDirectory(this.getMyDirectory(PathFinder.MyPriorityModDir));
-                mainConsole.tryLogCustom("Created Mods directory.", "DirChecker", LogType.Generic);
-            }
-            if (!Directory.Exists(this.getMyDataDirectory()))
-            {
-                Directory.CreateDirectory(this.getMyDataDirectory());
-                mainConsole.tryLogCustom("Created Data directory.", "DirChecker", LogType.Generic);
-            }
-
-        }
-        private void loadPriorityMods()
-        {
-            try
-            {
-                string[] priorityMods = Directory.GetFiles(this.getMyDirectory(PathFinder.MyPriorityModDir));
-                foreach (string mod in priorityMods)
-                {
-                    if (Path.GetExtension(mod) != ".dll") continue;
-                    this.loadModFromFile(mod);
-                }
-            }
-            catch (MyCoreException e)
-            {
-                e.caller = new MyCoreException.MyCaller("loadPriorityMods", "ModLoader.cs");
-            }
-            catch (Exception e)
-            {
-                mainConsole.logError(e);
-            }
-
-        }
-        private void loadMods()
-        {
-            try
-            { 
-                string[] normalMods = Directory.GetFiles(this.getMyDirectory(PathFinder.MyNormalModDir));
-                foreach (string mod in normalMods)
-                {
-                    this.loadModFromFile(mod);
-                }
-            }
-            catch (MyCoreException e)
-            {
-                e.caller = new MyCoreException.MyCaller("loadMods", "ModLoader.cs");
-            }
-            catch (Exception e)
-            {
-                mainConsole.logError(e);
-            }
-        }
-        private void loadModFromFile(String modFile)
-        {
-            try
-            {
-                if (Path.GetExtension(modFile) != ".dll") return;
-                string modFileName = Path.GetFileNameWithoutExtension(modFile);
-                mainConsole.log("Loading mod: " + modFileName, logTag);
-                Assembly modAssembly = Assembly.LoadFrom(modFile);
-                MyMod entryObject = null;
-				foreach (Type modType in modAssembly.GetTypes())
-                {
-                    object[] attributeList = modType.GetCustomAttributes(typeof(MyModEntryPoint), true);
-                    if (attributeList.Length == 1)
-                    {
-                        entryObject = Activator.CreateInstance(modType) as MyMod;
-                    }
-                }
-                if (entryObject == null)
-                {
-                    mainConsole.tryLogCustom("Mod does not contain a ModLoader entry point.", logTag, LogType.Generic);
-                    mainConsole.tryLogCustom("It is possible this mod is not compatible with ModLoader.", logTag, LogType.Generic);
-                    return;
-                }
-                string infoPath = Path.Combine(Path.GetDirectoryName(modFile), Path.GetFileNameWithoutExtension(modFile));
-                if (entryObject.LoadAssets(Path.Combine(infoPath,"Assets")))
-                {
-                    mainConsole.tryLogCustom("Loaded assets.", logTag, LogType.Generic);
-                    if (entryObject.fetchIcon())
-                    {
-                        mainConsole.tryLogCustom("Loaded custom icon (Use UIE to display).", logTag, LogType.Generic);
-                    }
-                }
-                if (mods.ContainsKey(entryObject.myName))
-                {
-                    mainConsole.tryLogCustom("Mod by the name " + entryObject.myName + " already exists!", logTag, LogType.Generic);
-                    return;
-                }
-                string dataPath = Path.Combine(this.getMyDataDirectory(), modFileName);
-                entryObject.assignDataPath(dataPath);
-				MethodInfo[] methods = entryObject.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-                foreach (MethodInfo method in methods)
-                {
-                    MyListenerAttribute[] att = (MyListenerAttribute[]) method.GetCustomAttributes(typeof(MyListenerAttribute), true);
-                    if (att.Length == 1)
-                    {
-                        new HookSystem.ReWork.MyHookListener(method,entryObject);
-                    }
-                }
-				FieldInfo[] fields = entryObject.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-				foreach (FieldInfo field in fields)
+		{
+			bool flag = Application.platform == RuntimePlatform.WindowsPlayer;
+			if (flag)
+			{
+				this.myConsole = new MyConsole();
+				ModLoader.mainConsole = this.myConsole;
+			}
+			this.performDirCheck();
+			ModLoader.translation = new MyTranslationController<ModLoaderLang>(this.getMyDataDirectory(), "ModLoaderTranslations");
+			ModLoader.logTag = ModLoader.translation.autoFormat("@LogTag", new object[0]);
+			this.myConsole.tryLogCustom(ModLoader.translation.autoFormat("@EntryMessage", new object[0]), ModLoader.logTag, LogType.Generic);
+			SerializableList<string> serializableList = new SerializableList<string>();
+			new MyHookListener(delegate(MyHook hook)
+			{
+				MyKeyDownHook myKeyDownHook = (MyKeyDownHook)hook;
+				bool flag2 = myKeyDownHook.keyDown == KeyCode.F12;
+				if (flag2)
 				{
-					MyHookListenerContainer[] att = (MyHookListenerContainer[]) field.GetCustomAttributes(typeof(MyHookListenerContainer),true);
-					if (att.Length == 1)
+					ModLoader.mainConsole.toggleConsole();
+				}
+				return hook;
+			}, typeof(MyKeyDownHook));
+		}
+
+		public void startLoadProcedure()
+		{
+			ModLoader.mainConsole.tryLogCustom("Initiating load procedure", ModLoader.logTag, LogType.Generic);
+			try
+			{
+				this.loadPriorityMods();
+			}
+			catch (Exception e)
+			{
+				this.myConsole.logError(e);
+			}
+			try
+			{
+				this.loadMods();
+			}
+			catch (Exception e2)
+			{
+				this.myConsole.logError(e2);
+			}
+		}
+
+		public string getMyBaseDirectory()
+		{
+			return Path.Combine(Application.dataPath, "SFSML");
+		}
+
+		public string getMyModDirectory()
+		{
+			return Path.Combine(Path.Combine(Application.dataPath, "SFSML"), "Mods");
+		}
+
+		public string getMyDataDirectory()
+		{
+			return Path.Combine(Path.Combine(Application.dataPath, "SFSML"), "Data");
+		}
+
+		public string getMyDirectory(PathFinder path)
+		{
+			string result;
+			switch (path)
+			{
+			case PathFinder.MyDataDir:
+				result = this.getMyDataDirectory();
+				break;
+			case PathFinder.MyModDir:
+				result = this.getMyModDirectory();
+				break;
+			case PathFinder.MyPriorityModDir:
+				result = Path.Combine(this.getMyModDirectory(), "priority");
+				break;
+			case PathFinder.MyNormalModDir:
+				result = Path.Combine(this.getMyModDirectory(), "normal");
+				break;
+			default:
+				result = null;
+				break;
+			}
+			return result;
+		}
+
+		private void performDirCheck()
+		{
+			bool flag = !Directory.Exists(this.getMyBaseDirectory());
+			if (flag)
+			{
+				Directory.CreateDirectory(this.getMyBaseDirectory());
+				ModLoader.mainConsole.tryLogCustom("Created SFSML directory.", "DirChecker", LogType.Generic);
+			}
+			bool flag2 = !Directory.Exists(this.getMyModDirectory());
+			if (flag2)
+			{
+				Directory.CreateDirectory(this.getMyModDirectory());
+				Directory.CreateDirectory(this.getMyDirectory(PathFinder.MyNormalModDir));
+				Directory.CreateDirectory(this.getMyDirectory(PathFinder.MyPriorityModDir));
+				ModLoader.mainConsole.tryLogCustom("Created Mods directory.", "DirChecker", LogType.Generic);
+			}
+			bool flag3 = !Directory.Exists(this.getMyDataDirectory());
+			if (flag3)
+			{
+				Directory.CreateDirectory(this.getMyDataDirectory());
+				ModLoader.mainConsole.tryLogCustom("Created Data directory.", "DirChecker", LogType.Generic);
+			}
+		}
+
+		private void loadPriorityMods()
+		{
+			try
+			{
+				string[] files = Directory.GetFiles(this.getMyDirectory(PathFinder.MyPriorityModDir));
+				foreach (string text in files)
+				{
+					bool flag = Path.GetExtension(text) != ".dll";
+					if (!flag)
 					{
-						MethodInfo[] fieldMethods = field.GetValue(entryObject).GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-						foreach (MethodInfo fieldMethod in fieldMethods)
+						this.loadModFromFile(text);
+					}
+				}
+			}
+			catch (MyCoreException ex)
+			{
+				ex.caller = new MyCoreException.MyCaller("loadPriorityMods", "ModLoader.cs");
+			}
+			catch (Exception e)
+			{
+				ModLoader.mainConsole.logError(e);
+			}
+		}
+
+		private void loadMods()
+		{
+			try
+			{
+				string[] files = Directory.GetFiles(this.getMyDirectory(PathFinder.MyNormalModDir));
+				foreach (string modFile in files)
+				{
+					this.loadModFromFile(modFile);
+				}
+			}
+			catch (MyCoreException ex)
+			{
+				ex.caller = new MyCoreException.MyCaller("loadMods", "ModLoader.cs");
+			}
+			catch (Exception e)
+			{
+				ModLoader.mainConsole.logError(e);
+			}
+		}
+
+		private void loadModFromFile(string modFile)
+		{
+			try
+			{
+				bool flag = Path.GetExtension(modFile) != ".dll";
+				if (!flag)
+				{
+					string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(modFile);
+					ModLoader.mainConsole.log("Loading mod: " + fileNameWithoutExtension, ModLoader.logTag);
+					Assembly assembly = Assembly.LoadFrom(modFile);
+					MyMod myMod = null;
+					foreach (Type type in assembly.GetTypes())
+					{
+						object[] customAttributes = type.GetCustomAttributes(typeof(MyModEntryPoint), true);
+						bool flag2 = customAttributes.Length == 1;
+						if (flag2)
 						{
-							new MyHookListener(fieldMethod,entryObject);
+							myMod = (Activator.CreateInstance(type) as MyMod);
+						}
+					}
+					bool flag3 = myMod == null;
+					if (flag3)
+					{
+						ModLoader.mainConsole.tryLogCustom("Mod does not contain a ModLoader entry point.", ModLoader.logTag, LogType.Generic);
+						ModLoader.mainConsole.tryLogCustom("It is possible this mod is not compatible with ModLoader.", ModLoader.logTag, LogType.Generic);
+					}
+					else
+					{
+						List<string> list = new List<string>();
+						foreach (AssemblyName assemblyName in assembly.GetReferencedAssemblies())
+						{
+							list.Add(assemblyName.FullName);
+						}
+						ModLoader.mainConsole.tryLogCustom("Assemblies: [" + string.Join(",", list.ToArray()) + "]", ModLoader.logTag, LogType.Generic);
+						string path = Path.Combine(Path.GetDirectoryName(modFile), Path.GetFileNameWithoutExtension(modFile));
+						bool flag4 = myMod.LoadAssets(Path.Combine(path, "Assets"));
+						if (flag4)
+						{
+							ModLoader.mainConsole.tryLogCustom("Loaded assets.", ModLoader.logTag, LogType.Generic);
+							bool flag5 = myMod.fetchIcon();
+							if (flag5)
+							{
+								ModLoader.mainConsole.tryLogCustom("Loaded custom icon (Use UIE to display).", ModLoader.logTag, LogType.Generic);
+							}
+						}
+						bool flag6 = this.mods.ContainsKey(myMod.myName);
+						if (flag6)
+						{
+							ModLoader.mainConsole.tryLogCustom("Mod by the name " + myMod.myName + " already exists!", ModLoader.logTag, LogType.Generic);
+						}
+						else
+						{
+							string path2 = Path.Combine(this.getMyDataDirectory(), fileNameWithoutExtension);
+							myMod.assignDataPath(path2);
+							MethodInfo[] methods = myMod.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+							foreach (MethodInfo methodInfo in methods)
+							{
+								MyListenerAttribute[] array2 = (MyListenerAttribute[])methodInfo.GetCustomAttributes(typeof(MyListenerAttribute), true);
+								bool flag7 = array2.Length == 1;
+								if (flag7)
+								{
+									new MyHookListener(methodInfo, myMod);
+								}
+							}
+							FieldInfo[] fields = myMod.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+							foreach (FieldInfo fieldInfo in fields)
+							{
+								MyHookListenerContainer[] array4 = (MyHookListenerContainer[])fieldInfo.GetCustomAttributes(typeof(MyHookListenerContainer), true);
+								bool flag8 = array4.Length == 1;
+								if (flag8)
+								{
+									MethodInfo[] methods2 = fieldInfo.GetValue(myMod).GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+									foreach (MethodInfo listenMethod in methods2)
+									{
+										new MyHookListener(listenMethod, myMod);
+									}
+								}
+							}
+							myMod.Load();
+							ModLoader.mainConsole.tryLogCustom(ModLoader.translation.autoFormat("@ModEntry", new object[]
+							{
+								myMod.myName,
+								myMod.myVersion,
+								myMod.myDescription
+							}), ModLoader.logTag, LogType.Generic);
+							this.loadedMods++;
+							this.mods[myMod.myName] = myMod;
+							MyHookSystem.executeHook<MyModLoadedHook>(new MyModLoadedHook(myMod));
 						}
 					}
 				}
-                entryObject.Load();
-                mainConsole.tryLogCustom(translation.autoFormat("@ModEntry",entryObject.myName,entryObject.myVersion,entryObject.myDescription), logTag, LogType.Generic);
-                this.loadedMods++;
-                mods[entryObject.myName] = entryObject;
-                MyHookSystem.executeHook<MyModLoadedHook>(new MyModLoadedHook(entryObject));
-            }
-            catch (MyCoreException e)
-            {
-                e.caller = new MyCoreException.MyCaller("loadModFromFile", "ModLoader.cs");
-            }
-            catch (Exception e)
-            {
-                mainConsole.logError(e);
-            }
-        }
-        Array codes = System.Enum.GetValues(typeof(KeyCode));
-        List<KeyCode> keyDown = new List<KeyCode>();
+			}
+			catch (MyCoreException ex)
+			{
+				ex.caller = new MyCoreException.MyCaller("loadModFromFile", "ModLoader.cs");
+			}
+			catch (Exception e)
+			{
+				ModLoader.mainConsole.logError(e);
+			}
+		}
 
-        long lastUpdate = General.getMillis();
-        public void RunUpdate()
-        {
-            long delta = General.getMillis() - lastUpdate;
-            if (delta < 100)
-                return;
-            this.KeyUpdate();
-            this.lastUpdate = General.getMillis();
-        }
-        
-        private void KeyUpdate()
-        {
-            foreach (KeyCode code in codes)
-            {
-                if (Input.GetKey(code))
-                {
-                    if (!keyDown.Contains(code))
-                    {
-                        MyKeyDownHook result = MyHookSystem.executeHook<MyKeyDownHook>(new MyKeyDownHook(code));
-                        if (result.isCanceled())
-                        {
-                            if (result.register)
-                            {
-                                keyDown.Add(code);
-                            }
-                            return;
-                        }
-                        keyDown.Add(code);
-                    }
-                }
-            }
-            List<KeyCode> nList = new List<KeyCode>(keyDown);
-            foreach (KeyCode down in nList)
-            {
-                if (!Input.GetKey(down))
-                {
-                    MyKeyUpHook hook = new MyKeyUpHook(down);
-                    MyKeyUpHook result = MyHookSystem.executeHook<MyKeyUpHook>(hook);
-                    if (result.isCanceled())
-                    {
-                        if (result.register)
-                        {
-                            keyDown.Remove(down);
-                        }
-                        return;
-                    }
-                    keyDown.Remove(down);
-                }
-            }
-        }
+		public void RunUpdate()
+		{
+			long num = General.getMillis() - this.lastUpdate;
+			bool flag = num < 100L;
+			if (!flag)
+			{
+				this.KeyUpdate();
+				this.lastUpdate = General.getMillis();
+			}
+		}
 
-        public bool isModLoaded(String name)
-        {
-            return this.mods.ContainsKey(name);
-        }
+		private void KeyUpdate()
+		{
+			foreach (object obj in this.codes)
+			{
+				KeyCode keyCode = (KeyCode)obj;
+				bool key = Input.GetKey(keyCode);
+				if (key)
+				{
+					bool flag = !this.keyDown.Contains(keyCode);
+					if (flag)
+					{
+						MyKeyDownHook myKeyDownHook = MyHookSystem.executeHook<MyKeyDownHook>(new MyKeyDownHook(keyCode));
+						bool flag2 = myKeyDownHook.isCanceled();
+						if (flag2)
+						{
+							bool register = myKeyDownHook.register;
+							if (register)
+							{
+								this.keyDown.Add(keyCode);
+							}
+							return;
+						}
+						this.keyDown.Add(keyCode);
+					}
+				}
+			}
+			List<KeyCode> list = new List<KeyCode>(this.keyDown);
+			foreach (KeyCode keyCode2 in list)
+			{
+				bool flag3 = !Input.GetKey(keyCode2);
+				if (flag3)
+				{
+					MyKeyUpHook baseHook = new MyKeyUpHook(keyCode2);
+					MyKeyUpHook myKeyUpHook = MyHookSystem.executeHook<MyKeyUpHook>(baseHook);
+					bool flag4 = myKeyUpHook.isCanceled();
+					if (flag4)
+					{
+						bool register2 = myKeyUpHook.register;
+						if (register2)
+						{
+							this.keyDown.Remove(keyCode2);
+						}
+						break;
+					}
+					this.keyDown.Remove(keyCode2);
+				}
+			}
+		}
 
-        public MyMod getMod(String name)
-        {
-            return this.mods[name];
-        }
+		public bool isModLoaded(string name)
+		{
+			return this.mods.ContainsKey(name);
+		}
 
-        public Dictionary<string, MyMod> getMods()
-        {
-            return new Dictionary<string, MyMod>(mods);
-        }
-    }
+		public MyMod getMod(string name)
+		{
+			return this.mods[name];
+		}
+
+		public Dictionary<string, MyMod> getMods()
+		{
+			return new Dictionary<string, MyMod>(this.mods);
+		}
+
+		static ModLoader()
+		{
+			// Note: this type is marked as 'beforefieldinit'.
+		}
+
+		public static MyConsole mainConsole;
+
+		public int loadedMods = 0;
+
+		private Dictionary<string, MyMod> mods = new Dictionary<string, MyMod>();
+
+		private Canvas overlayObject = null;
+
+		public MyConsole myConsole;
+
+		public static readonly string version = "1.0.0.R2";
+
+		private static string logTag = "ModLoader " + ModLoader.version;
+
+		public static MyTranslationController<ModLoaderLang> translation;
+
+		private GameObject overlay;
+
+		private Array codes = System.Enum.GetValues(typeof(KeyCode));
+
+		private List<KeyCode> keyDown = new List<KeyCode>();
+
+		private long lastUpdate = General.getMillis();
+	}
 }

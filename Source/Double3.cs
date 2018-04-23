@@ -1,18 +1,23 @@
+﻿using System;
 using Sirenix.OdinInspector;
-using System;
 using UnityEngine;
 
 [Serializable]
 public struct Double3
 {
-	[HorizontalGroup(0f, 0, 0, 0), LabelWidth(15f)]
-	public double x;
+	public Double3(double X, double Y, double Z)
+	{
+		this.x = X;
+		this.y = Y;
+		this.z = Z;
+	}
 
-	[HorizontalGroup(0f, 0, 0, 0), LabelWidth(15f)]
-	public double y;
-
-	[HorizontalGroup(0f, 0, 0, 0), LabelWidth(15f)]
-	public double z;
+	public Double3(double X, double Y)
+	{
+		this.x = X;
+		this.y = Y;
+		this.z = 0.0;
+	}
 
 	public static Double3 zero
 	{
@@ -20,6 +25,21 @@ public struct Double3
 		{
 			return new Double3(0.0, 0.0);
 		}
+	}
+
+	public static Double3 Cross(Double3 a, Double3 b)
+	{
+		return new Double3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+	}
+
+	public static Double3 Cross2d(Double3 a, Double3 b)
+	{
+		return new Double3(0.0, 0.0, a.x * b.y - a.y * b.x);
+	}
+
+	public static double Dot(Double3 a, Double3 b)
+	{
+		return a.x * b.x + a.y * b.y + a.z * b.z;
 	}
 
 	public double magnitude2d
@@ -51,65 +71,18 @@ public struct Double3
 		get
 		{
 			double magnitude2d = this.magnitude2d;
-			if (magnitude2d > 9.99999974737875E-06)
+			bool flag = magnitude2d > 9.99999974737875E-06;
+			Double3 result;
+			if (flag)
 			{
-				return this / magnitude2d;
+				result = this / magnitude2d;
 			}
-			return Double3.zero;
+			else
+			{
+				result = Double3.zero;
+			}
+			return result;
 		}
-	}
-
-	public Vector3 toVector3
-	{
-		get
-		{
-			return new Vector3((float)this.x, (float)this.y, (float)this.z);
-		}
-	}
-
-	public Vector2 toVector2
-	{
-		get
-		{
-			return new Vector2((float)this.x, (float)this.y);
-		}
-	}
-
-	public Double3 roundTo1000
-	{
-		get
-		{
-			return new Double3((double)((int)(this.x / 1000.0)) * 1000.0, (double)((int)(this.y / 1000.0)) * 1000.0);
-		}
-	}
-
-	public Double3(double X, double Y, double Z)
-	{
-		this.x = X;
-		this.y = Y;
-		this.z = Z;
-	}
-
-	public Double3(double X, double Y)
-	{
-		this.x = X;
-		this.y = Y;
-		this.z = 0.0;
-	}
-
-	public static Double3 Cross(Double3 a, Double3 b)
-	{
-		return new Double3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
-	}
-
-	public static Double3 Cross2d(Double3 a, Double3 b)
-	{
-		return new Double3(0.0, 0.0, a.x * b.y - a.y * b.x);
-	}
-
-	public static double Dot(Double3 a, Double3 b)
-	{
-		return a.x * b.x + a.y * b.y + a.z * b.z;
 	}
 
 	public static Double3 operator +(Double3 a, Double3 b)
@@ -152,9 +125,33 @@ public struct Double3
 		return new Double3(a.x / d, a.y / d, a.z / d);
 	}
 
+	public Vector3 toVector3
+	{
+		get
+		{
+			return new Vector3((float)this.x, (float)this.y, (float)this.z);
+		}
+	}
+
+	public Vector2 toVector2
+	{
+		get
+		{
+			return new Vector2((float)this.x, (float)this.y);
+		}
+	}
+
 	public static Double3 ToDouble3(Vector3 vector3)
 	{
 		return new Double3((double)vector3.x, (double)vector3.y, (double)vector3.z);
+	}
+
+	public Double3 roundTo1000
+	{
+		get
+		{
+			return new Double3((double)((int)(this.x / 1000.0)) * 1000.0, (double)((int)(this.y / 1000.0)) * 1000.0);
+		}
 	}
 
 	public Double3 RotateZ(double rotZ)
@@ -170,14 +167,36 @@ public struct Double3
 		double num2 = p2.y;
 		double num3 = num * num + num2 * num2;
 		double num4 = (p3.x * num + p3.y * num2) / num3;
-		if (num4 < 0.0)
+		bool flag = num4 < 0.0;
+		double result;
+		if (flag)
 		{
-			return 0.0;
+			result = 0.0;
 		}
-		if (num4 > 1.0)
+		else
 		{
-			return 1.0;
+			bool flag2 = num4 > 1.0;
+			if (flag2)
+			{
+				result = 1.0;
+			}
+			else
+			{
+				result = num4;
+			}
 		}
-		return num4;
+		return result;
 	}
+
+	[HorizontalGroup(0f, 0, 0, 0)]
+	[LabelWidth(15f)]
+	public double x;
+
+	[HorizontalGroup(0f, 0, 0, 0)]
+	[LabelWidth(15f)]
+	public double y;
+
+	[HorizontalGroup(0f, 0, 0, 0)]
+	[LabelWidth(15f)]
+	public double z;
 }

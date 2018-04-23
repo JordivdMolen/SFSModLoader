@@ -1,77 +1,62 @@
-﻿using SFSML.Exceptions;
-using SFSML.HookSystem;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Text;
+using SFSML.Exceptions;
 using UnityEngine;
 
 namespace SFSML
 {
-    public class MyConfig
-    {
-        Type t;
-        private object configuration = null;
-        public readonly string configurationPath;
-        public MyConfig(string path, Type baseType)
-        {
-            this.t = baseType;
-            this.configurationPath = path;
-            this.loadConfiguration(baseType);
-        }
+	public class MyConfig
+	{
+		public MyConfig(string path, Type baseType)
+		{
+			this.t = baseType;
+			this.configurationPath = path;
+			this.loadConfiguration(baseType);
+		}
 
-        public T getConfiguration<T>()
-        {
-            return (T) this.configuration;
-        }
-        public void loadConfiguration(Type configType)
-        {
-            if (!Directory.Exists(Path.GetDirectoryName(this.configurationPath)))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(this.configurationPath));
-            }
-            if (!File.Exists(this.configurationPath))
-            {
-                object obj = Activator.CreateInstance(configType);
-                if (!(obj is IMyConfig))
-                {
-                    throw new MyCoreException("configType is not part of a IMyConfig!", "MyConfig.cs");
-                }
-                IMyConfig cfg = obj as IMyConfig;
-                cfg.SetupDefaults();
-                this.configuration = cfg;
-                ((IMyConfig)this.configuration).setParent(this);
-                this.save();
-            }
-            String json = File.ReadAllText(this.configurationPath);
-            this.configuration = JsonUtility.FromJson(json, configType);
-            ((IMyConfig)this.configuration).setParent(this);
-        }
+		public T getConfiguration<T>()
+		{
+			return (T)((object)this.configuration);
+		}
 
-        public void save()
-        {
-            string json = JsonUtility.ToJson(this.configuration,true);
-            string path = this.configurationPath;
-            File.WriteAllText(path, json);
-        }
-    }
+		public void loadConfiguration(Type configType)
+		{
+			bool flag = !Directory.Exists(Path.GetDirectoryName(this.configurationPath));
+			if (flag)
+			{
+				Directory.CreateDirectory(Path.GetDirectoryName(this.configurationPath));
+			}
+			bool flag2 = !File.Exists(this.configurationPath);
+			if (flag2)
+			{
+				object obj = Activator.CreateInstance(configType);
+				bool flag3 = !(obj is IMyConfig);
+				if (flag3)
+				{
+					throw new MyCoreException("configType is not part of a IMyConfig!", "MyConfig.cs");
+				}
+				IMyConfig myConfig = obj as IMyConfig;
+				myConfig.SetupDefaults();
+				this.configuration = myConfig;
+				((IMyConfig)this.configuration).setParent(this);
+				this.save();
+			}
+			string json = File.ReadAllText(this.configurationPath);
+			this.configuration = JsonUtility.FromJson(json, configType);
+			((IMyConfig)this.configuration).setParent(this);
+		}
 
-    public abstract class IMyConfig
-    {
-        [NonSerialized]
-        private MyConfig parent = null;
-        abstract public void SetupDefaults();
-        public void save()
-        {
-            this.parent.save();
-        }
-        public void setParent(MyConfig par)
-        {
-            if (this.parent == null)
-            {
-                this.parent = par;
-            }
-        }
-    }
-    
+		public void save()
+		{
+			string contents = JsonUtility.ToJson(this.configuration, true);
+			string path = this.configurationPath;
+			File.WriteAllText(path, contents);
+		}
+
+		private Type t;
+
+		private object configuration = null;
+
+		public readonly string configurationPath;
+	}
 }

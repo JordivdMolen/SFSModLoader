@@ -1,87 +1,85 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <ProjectGuid>{9AE3EB35-37E3-4DF8-B859-C0B29D6851C6}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{779E7F9E-5FF5-4967-A08E-1F3AA0E58400}</ProjectGuid>
     <OutputType>Library</OutputType>
+    <RootNamespace>Assembly-CSharp</RootNamespace>
     <AssemblyName>Assembly-CSharp</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <WarningLevel>4</WarningLevel>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>bin\Debug\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <OutputPath>bin\Release\</OutputPath>
-    <DebugSymbols>true</DebugSymbols>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="UnityEngine">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.dll</HintPath>
+    <Reference Include="Sirenix.OdinInspector.Attributes">
+      <HintPath>..\Imports\Sirenix.OdinInspector.Attributes.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    <Reference Include="Stores">
+      <HintPath>..\Imports\Stores.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\Imports\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Purchasing">
+      <HintPath>..\Imports\UnityEngine.Purchasing.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\Imports\UnityEngine.UI.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AudioModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.AudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.Physics2DModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ParticleSystemModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Sirenix.OdinInspector.Attributes">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\Sirenix.OdinInspector.Attributes.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ScreenCaptureModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.GameCenterModule">
-      <HintPath>..\Spaceflight Simulator Pc v1.2\spaceflight simulator pc 1.2_data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
+    <Reference Include="UnityStore">
+      <HintPath>..\Imports\UnityStore.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Assets\SFSML\Utility\General.cs" />
     <Compile Include="Blur.cs" />
     <Compile Include="BoolValueHolder.cs" />
     <Compile Include="CelestialBodyData.cs" />
+    <Compile Include="ClosestApproach.cs" />
+    <Compile Include="ColorModule.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="ControlModule.cs" />
     <Compile Include="CreateRocket.cs" />
     <Compile Include="CustomEvent.cs" />
+    <Compile Include="DockingPortModule.cs" />
     <Compile Include="Double3.cs" />
     <Compile Include="Ellipse.cs" />
     <Compile Include="EngineModule.cs" />
+    <Compile Include="FairingModule.cs" />
     <Compile Include="FloatValueHolder.cs" />
     <Compile Include="GameEvent.cs" />
     <Compile Include="GameEventListener.cs" />
     <Compile Include="GameSaving.cs" />
     <Compile Include="GPGSIds.cs" />
     <Compile Include="HeightMap.cs" />
+    <Compile Include="IAP.cs" />
+    <Compile Include="IconLoad.cs" />
     <Compile Include="InputController.cs" />
     <Compile Include="Kepler.cs" />
     <Compile Include="LandingLegModule.cs" />
@@ -98,6 +96,7 @@
     <Compile Include="NewBuildSystem\PlacedPart.cs" />
     <Compile Include="NewBuildSystem\Utility.cs" />
     <Compile Include="Orbit.cs" />
+    <Compile Include="OrbitLines.cs" />
     <Compile Include="ParachuteModule.cs" />
     <Compile Include="Part.cs" />
     <Compile Include="PartChildCollider.cs" />
@@ -105,12 +104,53 @@
     <Compile Include="PartsManager.cs" />
     <Compile Include="PlanetManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RcsModule.cs" />
     <Compile Include="Ref.cs" />
+    <Compile Include="ReorderableEventList.cs" />
     <Compile Include="ReorderableList.cs" />
     <Compile Include="Resource.cs" />
     <Compile Include="ResourceModule.cs" />
     <Compile Include="Saving.cs" />
     <Compile Include="SeparatorModule.cs" />
+    <Compile Include="SFSML\Attributes\MyConfigIdentifier.cs" />
+    <Compile Include="SFSML\Attributes\MyHookListenerContainer.cs" />
+    <Compile Include="SFSML\Attributes\MyListenerAttribute.cs" />
+    <Compile Include="SFSML\Attributes\MyModEntryPoint.cs" />
+    <Compile Include="SFSML\Enum\PathFinder.cs" />
+    <Compile Include="SFSML\Exceptions\MyCoreException.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyPartCreatedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyPartDragHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\BuildHooks\MyRocketToLaunchpadHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\FrameHooks\MyOnGuiHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\FrameHooks\MySceneChangedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\FrameHooks\MySceneChangeHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\PartHooks\MyPartBeforeDestroyHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\PartHooks\MyPartUsedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\PartHooks\MyPartUseHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\PartHooks\MyUpdateResourceHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyKeyDownHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyKeyUpHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyModLoadedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MySceneChangedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MySceneChangeHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\VesselHooks\MyVesselLandedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\VesselHooks\MyVesselOnDestroyHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\MyHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\MyHookListener.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\MyHookSystem.cs" />
+    <Compile Include="SFSML\IMyConfig.cs" />
+    <Compile Include="SFSML\IO\Storable\SerializableList.cs" />
+    <Compile Include="SFSML\IO\Storable\SerializableObject.cs" />
+    <Compile Include="SFSML\LogType.cs" />
+    <Compile Include="SFSML\ModLoader.cs" />
+    <Compile Include="SFSML\MyAssetHolder.cs" />
+    <Compile Include="SFSML\MyConfig.cs" />
+    <Compile Include="SFSML\MyConsole.cs" />
+    <Compile Include="SFSML\MyMod.cs" />
+    <Compile Include="SFSML\SFSMLBase.cs" />
+    <Compile Include="SFSML\Translation\Languages\ModLoaderLang.cs" />
+    <Compile Include="SFSML\Translation\MyTranslationController.cs" />
+    <Compile Include="SFSML\Utility\UnityUtil.cs" />
     <Compile Include="SimpleReorderableList.cs" />
     <Compile Include="SortingLayerExposer.cs" />
     <Compile Include="Soundtrack.cs" />
@@ -118,9 +158,16 @@
     <Compile Include="TipsData.cs" />
     <Compile Include="TorqueModule.cs" />
     <Compile Include="Touch.cs" />
+    <Compile Include="TransferWindow.cs" />
+    <Compile Include="UIEventDelegate\AttributeExtension.cs" />
+    <Compile Include="UIEventDelegate\Entry.cs" />
+    <Compile Include="UIEventDelegate\EventDelegate.cs" />
+    <Compile Include="UIEventDelegate\ParameterType.cs" />
     <Compile Include="ValuesModule.cs" />
     <Compile Include="Vessel.cs" />
     <Compile Include="Warning.cs" />
+    <Compile Include="Wheel.cs" />
+    <Compile Include="WheelModule.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

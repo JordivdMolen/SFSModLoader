@@ -1,22 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class SeparatorModule : Module
 {
-	public BoolValueHolder separated;
-
-	public Vector2 separationForce;
-
-	public Transform leftHalfPrefab;
-
-	public Transform rightHalfPrefab;
-
-	public bool showParametersDescription = true;
-
-	public UnityEvent onSeparate;
-
 	public override List<object> SaveVariables
 	{
 		get
@@ -32,26 +20,40 @@ public class SeparatorModule : Module
 	{
 		get
 		{
-			return (!this.showParametersDescription) ? new List<string>() : new List<string>
+			List<string> result;
+			if (this.showParametersDescription)
 			{
-				"Separation Force: " + this.separationForce.magnitude.ToString() + "kN"
-			};
+				(result = new List<string>()).Add("Separation Force: " + this.separationForce.magnitude.ToString() + "kN");
+			}
+			else
+			{
+				result = new List<string>();
+			}
+			return result;
 		}
 	}
 
 	public override void OnPartUsed()
 	{
-		if (this.separated.boolValue)
+		bool boolValue = this.separated.boolValue;
+		if (!boolValue)
 		{
-			return;
+			bool timeWarping = Ref.timeWarping;
+			if (timeWarping)
+			{
+				Ref.controller.ShowMsg("Cannot use part while time warping");
+			}
+			else
+			{
+				this.separated.boolValue = true;
+				this.onSeparate.Invoke();
+			}
 		}
-		if (Ref.timeWarping)
-		{
-			Ref.controller.ShowMsg("Cannot use part while time warping");
-			return;
-		}
-		this.separated.boolValue = true;
-		this.onSeparate.Invoke();
+	}
+
+	public void SetSeparated(bool value)
+	{
+		this.separated.boolValue = value;
 	}
 
 	public void SeparateSurface(int surfaceId)
@@ -62,7 +64,8 @@ public class SeparatorModule : Module
 		for (int i = 0; i < this.part.joints.Count; i++)
 		{
 			int num2 = (!(this.part.joints[i].fromPart == this.part)) ? this.part.joints[i].toSurfaceIndex : this.part.joints[i].fromSurfaceIndex;
-			if (num2 == surfaceId)
+			bool flag = num2 == surfaceId;
+			if (flag)
 			{
 				list.Add((!(this.part.joints[i].fromPart == this.part)) ? this.part.joints[i].fromPart : this.part.joints[i].toPart);
 				list2.Add((!(this.part.joints[i].fromPart == this.part)) ? this.part.joints[i].coveredAmount : this.part.joints[i].coveredAmount);
@@ -75,9 +78,17 @@ public class SeparatorModule : Module
 		Vector2 a = Quaternion.Euler(0f, 0f, base.transform.rotation.eulerAngles.z) * new Vector2(this.separationForce.x * (float)this.part.orientation.x, this.separationForce.y * (float)this.part.orientation.y);
 		for (int j = 0; j < list.Count; j++)
 		{
-			list[j].vessel.partsManager.rb2d.AddForceAtPosition(a * (list2[j] / num), relativePoint);
+			bool flag2 = list[j].vessel.partsManager.rb2d != null && !float.IsNaN(list2[j] / num);
+			if (flag2)
+			{
+				list[j].vessel.partsManager.rb2d.AddForceAtPosition(a * (list2[j] / num), relativePoint);
+			}
 		}
-		this.part.vessel.partsManager.rb2d.AddForceAtPosition(-a, relativePoint);
+		bool flag3 = list.Count > 0 && this.part.vessel.partsManager.rb2d != null;
+		if (flag3)
+		{
+			this.part.vessel.partsManager.rb2d.AddForceAtPosition(-a, relativePoint);
+		}
 	}
 
 	public void ApplyForce()
@@ -91,8 +102,8 @@ public class SeparatorModule : Module
 	{
 		Part part = CreateRocket.CreatePart(this.leftHalfPrefab, this.part.orientation, this.part.transform.parent, this.part.transform.localPosition);
 		Part part2 = CreateRocket.CreatePart(this.rightHalfPrefab, this.part.orientation, this.part.transform.parent, this.part.transform.localPosition);
-		this.TransferJoints(0, part, 0);
-		this.TransferJoints(1, part2, 0);
+		SeparatorModule.TransferJoints(this.part, 0, part, 0);
+		SeparatorModule.TransferJoints(this.part, 1, part2, 0);
 		this.part.vessel.partsManager.parts.Add(part);
 		this.part.vessel.partsManager.parts.Add(part2);
 		this.part.vessel.partsManager.UpdatePartsGruping(true, this.part.vessel);
@@ -101,15 +112,17 @@ public class SeparatorModule : Module
 		this.part.DestroyPart(false, true);
 	}
 
-	public void TransferJoints(int transferSurfaceId, Part transferToPart, int toSurfaceId)
+	public static void TransferJoints(Part part, int transferSurfaceId, Part transferToPart, int toSurfaceId)
 	{
-		for (int i = 0; i < this.part.joints.Count; i++)
+		for (int i = 0; i < part.joints.Count; i++)
 		{
-			Part.Joint joint = this.part.joints[i];
-			bool flag = joint.fromPart == this.part;
-			if (((!flag) ? joint.toSurfaceIndex : joint.fromSurfaceIndex) == transferSurfaceId)
+			Part.Joint joint = part.joints[i];
+			bool flag = joint.fromPart == part;
+			bool flag2 = ((!flag) ? joint.toSurfaceIndex : joint.fromSurfaceIndex) == transferSurfaceId;
+			if (flag2)
 			{
-				if (flag)
+				bool flag3 = flag;
+				if (flag3)
 				{
 					joint.fromPart = transferToPart;
 					joint.fromSurfaceIndex = toSurfaceId;
@@ -120,9 +133,25 @@ public class SeparatorModule : Module
 					joint.toSurfaceIndex = toSurfaceId;
 				}
 				transferToPart.joints.Add(joint);
-				this.part.joints.RemoveAt(i);
+				part.joints.RemoveAt(i);
 				i--;
 			}
 		}
 	}
+
+	public SeparatorModule()
+	{
+	}
+
+	public BoolValueHolder separated;
+
+	public Vector2 separationForce;
+
+	public Transform leftHalfPrefab;
+
+	public Transform rightHalfPrefab;
+
+	public bool showParametersDescription = true;
+
+	public UnityEvent onSeparate;
 }

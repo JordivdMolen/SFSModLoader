@@ -1,15 +1,10 @@
+﻿using System;
 using Sirenix.OdinInspector;
-using System;
 using UnityEngine;
 
 public class HeightMap : MonoBehaviour
 {
-	public Sprite heightMapTexture;
-
-	[TableMatrix, Space]
-	public float[] HeightDataArray;
-
-	[Button("Generate Height Map", ButtonSizes.Medium)]
+	[Button("Generate Height Map", 22)]
 	private void GenerateHightData()
 	{
 		this.HeightDataArray = new float[this.heightMapTexture.texture.width];
@@ -24,11 +19,22 @@ public class HeightMap : MonoBehaviour
 		for (int i = 0; i < this.heightMapTexture.texture.height; i++)
 		{
 			float a = this.heightMapTexture.texture.GetPixel(x, i).a;
-			if (a < 1f)
+			bool flag = a < 1f;
+			if (flag)
 			{
 				return ((float)i + a) / (float)this.heightMapTexture.texture.height;
 			}
 		}
 		return 1f;
 	}
+
+	public HeightMap()
+	{
+	}
+
+	public Sprite heightMapTexture;
+
+	[Space]
+	[TableMatrix]
+	public float[] HeightDataArray;
 }

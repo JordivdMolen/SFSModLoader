@@ -1,16 +1,11 @@
+﻿using System;
 using Sirenix.OdinInspector;
-using System;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class CustomEvent : MonoBehaviour
 {
-	[HideLabel, Space(3f)]
-	public string function;
-
-	public UnityEvent customEvent;
-
-	[Button(ButtonSizes.Small)]
+	[Button(0)]
 	public void InvokeEvenets()
 	{
 		this.customEvent.Invoke();
@@ -20,4 +15,14 @@ public class CustomEvent : MonoBehaviour
 	{
 		base.Invoke("InvokeEvenets", delay);
 	}
+
+	public CustomEvent()
+	{
+	}
+
+	[HideLabel]
+	[Space(3f)]
+	public string function;
+
+	public UnityEvent customEvent;
 }

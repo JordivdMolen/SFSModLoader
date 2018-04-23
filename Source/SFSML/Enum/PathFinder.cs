@@ -2,12 +2,11 @@
 
 namespace SFSML.Enum
 {
-    public enum PathFinder
-    {
-        MyDataDir,
-        MyModDir,
-        MyPriorityModDir,
-        MyNormalModDir
-    }
+	public enum PathFinder
+	{
+		MyDataDir,
+		MyModDir,
+		MyPriorityModDir,
+		MyNormalModDir
+	}
 }
-

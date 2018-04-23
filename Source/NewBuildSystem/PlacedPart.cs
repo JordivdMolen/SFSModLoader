@@ -1,6 +1,6 @@
-using Sirenix.OdinInspector;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace NewBuildSystem
@@ -8,17 +8,6 @@ namespace NewBuildSystem
 	[Serializable]
 	public class PlacedPart
 	{
-		public Transform partIcon;
-
-		[BoxGroup, DrawWithUnity]
-		public Vector2 position;
-
-		[BoxGroup, Space]
-		public Orientation orientation;
-
-		[Space]
-		public PartData partData;
-
 		public PlacedPart(Transform partIcon, Vector2 position, Orientation orientation, PartData partData)
 		{
 			this.position = position;
@@ -31,15 +20,14 @@ namespace NewBuildSystem
 			return this.position + pos * this.orientation;
 		}
 
-		public static bool IsInside(Vector2 a, PlacedPart b)
+		public static bool IsInside(Vector2 a, PlacedPart b, float edge)
 		{
-			PartData.Area[] areas = b.partData.areas;
-			for (int i = 0; i < areas.Length; i++)
+			foreach (PartData.Area area in b.partData.areas)
 			{
-				PartData.Area area = areas[i];
-				bool flag = Utility.IsInsideRange(a.x, b.GetWorldPosition(area.start).x, b.GetWorldPosition(area.start + area.size).x, true);
-				bool flag2 = Utility.IsInsideRange(a.y, b.GetWorldPosition(area.start).y, b.GetWorldPosition(area.start + area.size).y, true);
-				if (flag && flag2)
+				bool flag = Utility.IsInsideRange(a.x, b.GetWorldPosition(area.start).x, b.GetWorldPosition(area.start + area.size).x, true, edge);
+				bool flag2 = Utility.IsInsideRange(a.y, b.GetWorldPosition(area.start).y, b.GetWorldPosition(area.start + area.size).y, true, edge);
+				bool flag3 = flag && flag2;
+				if (flag3)
 				{
 					return true;
 				}
@@ -49,19 +37,20 @@ namespace NewBuildSystem
 
 		public static bool IsOverplaing(PlacedPart a, PlacedPart b)
 		{
-			PartData.Area[] areas = a.partData.areas;
-			for (int i = 0; i < areas.Length; i++)
+			foreach (PartData.Area area in a.partData.areas)
 			{
-				PartData.Area area = areas[i];
-				PartData.Area[] areas2 = b.partData.areas;
-				for (int j = 0; j < areas2.Length; j++)
+				foreach (PartData.Area area2 in b.partData.areas)
 				{
-					PartData.Area area2 = areas2[j];
-					bool flag = Utility.LineOverlaps(a.GetWorldPosition(area.start).x, a.GetWorldPosition(area.start + area.size).x, b.GetWorldPosition(area2.start).x, b.GetWorldPosition(area2.start + area2.size).x);
-					bool flag2 = Utility.LineOverlaps(a.GetWorldPosition(area.start).y, a.GetWorldPosition(area.start + area.size).y, b.GetWorldPosition(area2.start).y, b.GetWorldPosition(area2.start + area2.size).y);
-					if (flag && flag2)
+					bool flag = !area.hitboxOnly && !area2.hitboxOnly;
+					if (flag)
 					{
-						return true;
+						bool flag2 = Utility.LineOverlaps(a.GetWorldPosition(area.start).x, a.GetWorldPosition(area.start + area.size).x, b.GetWorldPosition(area2.start).x, b.GetWorldPosition(area2.start + area2.size).x);
+						bool flag3 = Utility.LineOverlaps(a.GetWorldPosition(area.start).y, a.GetWorldPosition(area.start + area.size).y, b.GetWorldPosition(area2.start).y, b.GetWorldPosition(area2.start + area2.size).y);
+						bool flag4 = flag2 && flag3;
+						if (flag4)
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -72,63 +61,91 @@ namespace NewBuildSystem
 		{
 			bool flag = Mathf.Abs((surfaceA.size * partA.orientation).x) > 0.1f;
 			bool flag2 = Mathf.Abs((surfaceB.size * partB.orientation).x) > 0.1f;
-			if (flag != flag2)
+			bool flag3 = flag != flag2;
+			float result;
+			if (flag3)
 			{
-				return 0f;
+				result = 0f;
 			}
-			Vector2 worldPosition = partA.GetWorldPosition(surfaceA.start);
-			Vector2 worldPosition2 = partB.GetWorldPosition(surfaceB.start);
-			if ((!flag) ? (Mathf.Abs(worldPosition.x - worldPosition2.x) > 0.1f) : (Mathf.Abs(worldPosition.y - worldPosition2.y) > 0.1f))
+			else
 			{
-				return 0f;
+				Vector2 worldPosition = partA.GetWorldPosition(surfaceA.start);
+				Vector2 worldPosition2 = partB.GetWorldPosition(surfaceB.start);
+				bool flag4 = (!flag) ? (Mathf.Abs(worldPosition.x - worldPosition2.x) > 0.1f) : (Mathf.Abs(worldPosition.y - worldPosition2.y) > 0.1f);
+				if (flag4)
+				{
+					result = 0f;
+				}
+				else
+				{
+					Vector2 worldPosition3 = partA.GetWorldPosition(surfaceA.start + surfaceA.size);
+					Vector2 worldPosition4 = partB.GetWorldPosition(surfaceB.start + surfaceB.size);
+					result = ((!flag) ? Utility.Overlap(worldPosition.y, worldPosition3.y, worldPosition2.y, worldPosition4.y) : Utility.Overlap(worldPosition.x, worldPosition3.x, worldPosition2.x, worldPosition4.x));
+				}
 			}
-			Vector2 worldPosition3 = partA.GetWorldPosition(surfaceA.start + surfaceA.size);
-			Vector2 worldPosition4 = partB.GetWorldPosition(surfaceB.start + surfaceB.size);
-			return (!flag) ? Utility.Overlap(worldPosition.y, worldPosition3.y, worldPosition2.y, worldPosition4.y) : Utility.Overlap(worldPosition.x, worldPosition3.x, worldPosition2.x, worldPosition4.x);
+			return result;
 		}
 
 		public void UpdateConnected(List<PlacedPart> parts)
 		{
-			if (this.partIcon == null)
+			bool flag = this.partIcon == null;
+			if (!flag)
 			{
-				return;
-			}
-			PartData.AttachmentSurface[] attachmentSurfaces = this.partData.attachmentSurfaces;
-			for (int i = 0; i < attachmentSurfaces.Length; i++)
-			{
-				PartData.AttachmentSurface surfaceA = attachmentSurfaces[i];
-				this.UpdateSuraface(surfaceA, parts);
+				foreach (PartData.AttachmentSurface surfaceA in this.partData.attachmentSurfaces)
+				{
+					this.UpdateSuraface(surfaceA, parts);
+				}
 			}
 		}
 
 		public void UpdateSuraface(PartData.AttachmentSurface surfaceA, List<PlacedPart> parts)
 		{
 			float num = 0f;
-			foreach (PlacedPart current in parts)
+			foreach (PlacedPart placedPart in parts)
 			{
-				if (current.partData != null)
+				bool flag = placedPart.partData != null && placedPart.partIcon.name != "Inactive";
+				if (flag)
 				{
-					PartData.AttachmentSurface[] attachmentSurfaces = current.partData.attachmentSurfaces;
-					for (int i = 0; i < attachmentSurfaces.Length; i++)
+					foreach (PartData.AttachmentSurface surfaceB in placedPart.partData.attachmentSurfaces)
 					{
-						PartData.AttachmentSurface surfaceB = attachmentSurfaces[i];
-						if (current != this)
+						bool flag2 = placedPart != this;
+						if (flag2)
 						{
-							num += Mathf.Max(0f, PlacedPart.SurfacesConnect(this, surfaceA, current, surfaceB));
+							num += Mathf.Max(0f, PlacedPart.SurfacesConnect(this, surfaceA, placedPart, surfaceB));
 						}
 					}
 				}
 			}
-			bool flag = num > 0f;
-			PartData.AttachmentSprite[] attachmentSprites = this.partData.attachmentSprites;
-			for (int j = 0; j < attachmentSprites.Length; j++)
+			bool flag3 = num > 0f;
+			foreach (PartData.AttachmentSprite attachmentSprite in this.partData.attachmentSprites)
 			{
-				PartData.AttachmentSprite attachmentSprite = attachmentSprites[j];
-				if (this.partData.attachmentSurfaces[attachmentSprite.surfaceId] == surfaceA)
+				bool flag4 = attachmentSprite.surfaceId != -1;
+				if (flag4)
 				{
-					Utility.GetByPath(this.partIcon, attachmentSprite.path).gameObject.SetActive(flag != attachmentSprite.inverse);
+					bool flag5 = this.partData.attachmentSurfaces[attachmentSprite.surfaceId] == surfaceA;
+					if (flag5)
+					{
+						Utility.GetByPath(this.partIcon, attachmentSprite.path).gameObject.SetActive(flag3 != attachmentSprite.inverse);
+					}
+				}
+				else
+				{
+					Utility.GetByPath(this.partIcon, attachmentSprite.path).gameObject.SetActive(attachmentSprite.inverse);
 				}
 			}
 		}
+
+		public Transform partIcon;
+
+		[DrawWithUnity]
+		[BoxGroup]
+		public Vector2 position;
+
+		[BoxGroup]
+		[Space]
+		public Orientation orientation;
+
+		[Space]
+		public PartData partData;
 	}
 }

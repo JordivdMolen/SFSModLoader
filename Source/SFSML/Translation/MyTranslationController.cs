@@ -1,63 +1,71 @@
-﻿using SFSML;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace SFSML.Translation
 {
-    public class MyTranslationController<T>
-    {
-        public readonly string translationPath;
-        public readonly T translatable;
-        public MyTranslationController(MyMod host) : this(host.getDataPath(),"translations")
-        { 
-        }
-        public MyTranslationController(String purePath) : this(purePath,"translations")
-        {
-        }
-        public MyTranslationController(MyMod host, String name) : this(host.getDataPath(), name)
-        {
-        }
-        public MyTranslationController(String purePath, String name)
-        {
-            this.translationPath = Path.Combine(purePath, name+".translation");
-            if (!File.Exists(this.translationPath))
-            {
-                this.translatable = Activator.CreateInstance<T>();
-                File.WriteAllText(this.translationPath, JsonUtility.ToJson(this.translatable,true));
-            }
-            this.translatable = JsonUtility.FromJson<T>(File.ReadAllText(this.translationPath));
-        }
+	public class MyTranslationController<T>
+	{
+		public MyTranslationController(MyMod host) : this(host.getDataPath(), "translations")
+		{
+		}
 
-        public String autoFormat(string translation, params object[] formatations)
-        {
-            if (translation.StartsWith("@"))
-            {
-                translation = translation.Substring(1);
-                foreach (FieldInfo info in this.translatable.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                {
-                    if (info.Name.Equals(translation))
-                    {
-                        translation = info.GetValue(this.translatable).ToString();
-                    }
-                }
-            }
-            foreach (FieldInfo info in this.translatable.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-            {
-                if (translation.Contains("%"+info.Name+"%"))
-                {
-                    translation = translation.Replace("%" + info.Name + "%", info.GetValue(this.translatable).ToString());
-                }
-            }
-            for (int x = 0; x < formatations.Length; x++)
-            {
-                translation = translation.Replace("{" + x.ToString() + "}", formatations[x].ToString());
-            }
-            return translation;
-        }
-    }
+		public MyTranslationController(string purePath) : this(purePath, "translations")
+		{
+		}
+
+		public MyTranslationController(MyMod host, string name) : this(host.getDataPath(), name)
+		{
+		}
+
+		public MyTranslationController(string purePath, string name)
+		{
+			this.translationPath = Path.Combine(purePath, name + ".translation");
+			bool flag = !File.Exists(this.translationPath);
+			if (flag)
+			{
+				this.translatable = Activator.CreateInstance<T>();
+				File.WriteAllText(this.translationPath, JsonUtility.ToJson(this.translatable, true));
+			}
+			this.translatable = JsonUtility.FromJson<T>(File.ReadAllText(this.translationPath));
+		}
+
+		public string autoFormat(string translation, params object[] formatations)
+		{
+			bool flag = translation.StartsWith("@");
+			T t;
+			if (flag)
+			{
+				translation = translation.Substring(1);
+				t = this.translatable;
+				foreach (FieldInfo fieldInfo in t.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+				{
+					bool flag2 = fieldInfo.Name.Equals(translation);
+					if (flag2)
+					{
+						translation = fieldInfo.GetValue(this.translatable).ToString();
+					}
+				}
+			}
+			t = this.translatable;
+			foreach (FieldInfo fieldInfo2 in t.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+			{
+				bool flag3 = translation.Contains("%" + fieldInfo2.Name + "%");
+				if (flag3)
+				{
+					translation = translation.Replace("%" + fieldInfo2.Name + "%", fieldInfo2.GetValue(this.translatable).ToString());
+				}
+			}
+			for (int k = 0; k < formatations.Length; k++)
+			{
+				translation = translation.Replace("{" + k.ToString() + "}", formatations[k].ToString());
+			}
+			return translation;
+		}
+
+		public readonly string translationPath;
+
+		public readonly T translatable;
+	}
 }

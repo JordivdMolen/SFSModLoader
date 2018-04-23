@@ -1,60 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MoveModule : Module
 {
-	[Serializable]
-	public class MoveData
-	{
-		public MoveModule.Type type;
-
-		public Transform transform;
-
-		public SpriteRenderer spriteRenderer;
-
-		public Image image;
-
-		public AnimationCurve X;
-
-		public AnimationCurve Y;
-
-		public Gradient gradient;
-
-		public MoveData()
-		{
-			this.X = new AnimationCurve();
-			this.Y = new AnimationCurve();
-			this.gradient = new Gradient();
-		}
-	}
-
-	public enum Type
-	{
-		RotationZ,
-		Scale,
-		Position,
-		CenterOfMass,
-		CenterOfDrag,
-		SpriteColor,
-		ImageColor,
-		Active,
-		Inactive,
-		FloatValue
-	}
-
-	public string pourpose;
-
-	public FloatValueHolder time;
-
-	public FloatValueHolder targetTime;
-
-	public float animationTime;
-
-	[HideInInspector]
-	public MoveModule.MoveData[] animationElements = new MoveModule.MoveData[0];
-
 	public override List<object> SaveVariables
 	{
 		get
@@ -75,7 +25,8 @@ public class MoveModule : Module
 	private void Update()
 	{
 		float num = Time.deltaTime / this.animationTime;
-		if (Mathf.Abs(this.targetTime.floatValue - this.time.floatValue) < num)
+		bool flag = Mathf.Abs(this.targetTime.floatValue - this.time.floatValue) < num;
+		if (flag)
 		{
 			this.time.floatValue = this.targetTime.floatValue;
 			base.enabled = false;
@@ -128,18 +79,82 @@ public class MoveModule : Module
 				this.animationElements[i].image.color = this.animationElements[i].gradient.Evaluate(this.time.floatValue);
 				break;
 			case MoveModule.Type.Active:
-				if (this.animationElements[i].transform.gameObject.activeSelf != this.animationElements[i].X.Evaluate(this.time.floatValue) > 0f)
+			{
+				bool flag = this.animationElements[i].transform.gameObject.activeSelf != this.animationElements[i].X.Evaluate(this.time.floatValue) > 0f;
+				if (flag)
 				{
 					this.animationElements[i].transform.gameObject.SetActive(this.animationElements[i].X.Evaluate(this.time.floatValue) > 0f);
 				}
 				break;
+			}
 			case MoveModule.Type.Inactive:
-				if (this.animationElements[i].transform.gameObject.activeSelf != this.animationElements[i].X.Evaluate(this.time.floatValue) <= 0f)
+			{
+				bool flag2 = this.animationElements[i].transform.gameObject.activeSelf != this.animationElements[i].X.Evaluate(this.time.floatValue) <= 0f;
+				if (flag2)
 				{
 					this.animationElements[i].transform.gameObject.SetActive(this.animationElements[i].X.Evaluate(this.time.floatValue) <= 0f);
 				}
 				break;
 			}
+			case MoveModule.Type.SoundVolume:
+				this.animationElements[i].audioSource.volume = this.animationElements[i].X.Evaluate(this.time.floatValue);
+				break;
+			}
 		}
+	}
+
+	public MoveModule()
+	{
+	}
+
+	public string pourpose;
+
+	public FloatValueHolder time;
+
+	public FloatValueHolder targetTime;
+
+	public float animationTime;
+
+	public MoveModule.MoveData[] animationElements = new MoveModule.MoveData[0];
+
+	[Serializable]
+	public class MoveData
+	{
+		public MoveData()
+		{
+			this.X = new AnimationCurve();
+			this.Y = new AnimationCurve();
+			this.gradient = new Gradient();
+		}
+
+		public MoveModule.Type type;
+
+		public Transform transform;
+
+		public SpriteRenderer spriteRenderer;
+
+		public Image image;
+
+		public AnimationCurve X;
+
+		public AnimationCurve Y;
+
+		public Gradient gradient;
+
+		public AudioSource audioSource;
+	}
+
+	public enum Type
+	{
+		RotationZ,
+		Scale,
+		Position,
+		CenterOfMass,
+		CenterOfDrag,
+		SpriteColor,
+		ImageColor,
+		Active,
+		Inactive,
+		SoundVolume
 	}
 }

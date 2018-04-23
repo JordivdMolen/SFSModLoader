@@ -1,18 +1,31 @@
-using System;
+﻿using System;
 
 public class LandingLegModule : Module
 {
-	public MoveModule moveModule;
-
 	public override void OnPartUsed()
 	{
-		if (Ref.timeWarping)
+		bool timeWarping = Ref.timeWarping;
+		if (timeWarping)
 		{
-			Ref.controller.ShowMsg("Cannot " + ((this.moveModule.targetTime.floatValue != 1f) ? "extend" : "retract") + " landing legs while time warping");
+			Ref.controller.ShowMsg((this.moveModule.targetTime.floatValue != this.closed) ? this.onTimeWarpWarningClose : this.onTimeWarpWarningOpen);
 		}
 		else
 		{
-			this.moveModule.SetTargetTime((float)((this.moveModule.targetTime.floatValue != 1f) ? 1 : 0));
+			this.moveModule.SetTargetTime((this.moveModule.targetTime.floatValue != this.closed) ? this.closed : this.open);
 		}
 	}
+
+	public LandingLegModule()
+	{
+	}
+
+	public MoveModule moveModule;
+
+	public string onTimeWarpWarningOpen;
+
+	public string onTimeWarpWarningClose;
+
+	public float closed;
+
+	public float open;
 }

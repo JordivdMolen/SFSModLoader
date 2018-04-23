@@ -1,112 +1,115 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using UnityEngine;
 
 namespace SFSML
 {
-    public class MyConsole
-    {
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetConsoleWindow();
+	public class MyConsole
+	{
+		[DllImport("kernel32.dll")]
+		private static extern IntPtr GetConsoleWindow();
 
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+		[DllImport("user32.dll")]
+		private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-        [DllImport("Kernel32.dll")]
-        private static extern bool AllocConsole();
+		[DllImport("Kernel32.dll")]
+		private static extern bool AllocConsole();
 
-        const int SW_HIDE = 0;
-        const int SW_SHOW = 5;
+		public MyConsole()
+		{
+			MyConsole.AllocConsole();
+			Console.SetOut(new StreamWriter(Console.OpenStandardOutput())
+			{
+				AutoFlush = true
+			});
+			this.visible = true;
+		}
 
-        private bool visible = false;
+		public void hideConsole()
+		{
+			MyConsole.ShowWindow(MyConsole.GetConsoleWindow(), 0);
+			this.visible = false;
+		}
 
-        private Action<string, LogType> logCustom;
+		public void showConsole()
+		{
+			MyConsole.ShowWindow(MyConsole.GetConsoleWindow(), 5);
+			this.visible = true;
+		}
 
-        public MyConsole()
-        {
-            AllocConsole();
-            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
-            this.visible = true;
-        }
-        public void hideConsole()
-        {
-            ShowWindow(GetConsoleWindow(), SW_HIDE);
-            this.visible = false;
-        }
-        public void showConsole()
-        {
-            ShowWindow(GetConsoleWindow(), SW_SHOW);
-            this.visible = true;
-        }
-        public void toggleConsole()
-        {
-            if (this.visible)
-            {
-                this.hideConsole();
-            } else
-            {
-                this.showConsole();
-            }
-        }
-        public void logError(Exception e)
-        {
-            StackTrace st = new StackTrace(e, true);
-            StackFrame sf = st.GetFrame(0);
-            int line = sf.GetFileLineNumber();
-            string file = sf.GetFileName();
-            this.tryLogCustom("##[ERROR]##","ErrorReporter",LogType.Error);
-            this.tryLogCustom(e.Message+e.StackTrace, "ErrorReporter", LogType.Error);
-            this.tryLogCustom(line + "@"+file, "ErrorReporter", LogType.Error);
-            this.tryLogCustom("##[ERROR]##", "ErrorReporter", LogType.Error);
-        }
-        public void log(String msg, String tag)
-        {
-            Console.WriteLine("["+ tag + "]: " + msg);
-        }
-        public void log(String msg)
-        {
-            this.log(msg, "Unkwn");
-        }
+		public void toggleConsole()
+		{
+			bool flag = this.visible;
+			if (flag)
+			{
+				this.hideConsole();
+			}
+			else
+			{
+				this.showConsole();
+			}
+		}
 
-        public void tryLogCustom(String msg, String tag, LogType type)
-        {
-            if (this.logCustom == null)
-            {
-                this.log(msg, tag);
-            } else
-            {
-                msg = "["+tag+"]: " + msg;
-                try
-                {
-                    this.logCustom(msg, type);
-                }
-                catch (Exception e)
-                {
-                    this.logError(e);
-                }
-            }
-        }
-        public void tryLogCustom(String msg, LogType type)
-        {
-            this.tryLogCustom(msg, "Unkwn", type);
-        }
-        public void setLogger(Action<string,LogType> logfunc)
-        {
-            this.logCustom = logfunc;
-        }
+		public void logError(Exception e)
+		{
+			StackTrace stackTrace = new StackTrace(e, true);
+			StackFrame frame = stackTrace.GetFrame(0);
+			int fileLineNumber = frame.GetFileLineNumber();
+			string fileName = frame.GetFileName();
+			this.tryLogCustom("##[ERROR]##", "ErrorReporter", LogType.Error);
+			this.tryLogCustom(e.Message + e.StackTrace, "ErrorReporter", LogType.Error);
+			this.tryLogCustom(fileLineNumber + "@" + fileName, "ErrorReporter", LogType.Error);
+			this.tryLogCustom("##[ERROR]##", "ErrorReporter", LogType.Error);
+		}
 
-    }
+		public void log(string msg, string tag)
+		{
+			Console.WriteLine("[" + tag + "]: " + msg);
+		}
 
-    public enum LogType
-    {
-        Generic,
-        Warning,
-        Error
-    }
+		public void log(string msg)
+		{
+			this.log(msg, "Unkwn");
+		}
 
+		public void tryLogCustom(string msg, string tag, LogType type)
+		{
+			bool flag = this.logCustom == null;
+			if (flag)
+			{
+				this.log(msg, tag);
+			}
+			else
+			{
+				msg = "[" + tag + "]: " + msg;
+				try
+				{
+					this.logCustom(msg, type);
+				}
+				catch (Exception e)
+				{
+					this.logError(e);
+				}
+			}
+		}
+
+		public void tryLogCustom(string msg, LogType type)
+		{
+			this.tryLogCustom(msg, "Unkwn", type);
+		}
+
+		public void setLogger(Action<string, LogType> logfunc)
+		{
+			this.logCustom = logfunc;
+		}
+
+		private const int SW_HIDE = 0;
+
+		private const int SW_SHOW = 5;
+
+		private bool visible = false;
+
+		private Action<string, LogType> logCustom;
+	}
 }

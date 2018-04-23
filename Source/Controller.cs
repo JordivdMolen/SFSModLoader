@@ -1,115 +1,13 @@
-using NewBuildSystem;
-using SFSML;
-using Sirenix.OdinInspector;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using NewBuildSystem;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Controller : MonoBehaviour
 {
-	[Header(" Controller")]
-	public string startAdress;
-
-	public CelestialBodyData loadedPlanet;
-
-	public List<Vessel> vessels;
-
-	public float camTargetAngle;
-
-	public float camAngularVelocity;
-
-	public float createHeight;
-
-	[Header(" Time")]
-	public double globalTime;
-
-	public int timewarpPhase;
-
-	public int[] warpSpeeds;
-
-	public double startedTimewarpTime;
-
-	[Header(" Rotation Controll")]
-	public float xAxis;
-
-	[Header(" UI Refs")]
-	public Image throttleBar;
-
-	public Transform fuelIconPrefab;
-
-	public Text heightUI;
-
-	public Text velocityUI;
-
-	public Text periapsisUI;
-
-	public Text apoapsisUI;
-
-	public Text throttlePercentUI;
-
-	public Text throttleOnUI;
-
-	public Text msgUI;
-
-	public Text warpedTimeCounterUI;
-
-	[Space]
-	public MoveModule timewarpButtonColorMove;
-
-	public MoveModule throttleColorMove;
-
-	[Space]
-	public List<EngineModule.FuelIcon> fuelIcons;
-
-	[Header(" Prefabs Refs")]
-	public Transform vesselPrefab;
-
-	public bool enableVelocityOffset;
-
-	[BoxGroup, Header("Camera")]
-	public float cameraDistanceGame;
-
-	[BoxGroup]
-	public LayerMask gameView;
-
-	[BoxGroup]
-	public LayerMask scaledView;
-
-	[BoxGroup]
-	public LayerMask mapView;
-
-	[BoxGroup]
-	public float scaledSpaceThreshold;
-
-	public Transform stars;
-
-	public Transform audioListener;
-
-	public Transform explosionParticle;
-
-	public float updatedPersistantTime;
-
-	public float regularUpdateTime;
-
-	public Vector2 cameraPositionGame;
-
-	public Vector2 cameraOffset;
-
-	public RectTransform directionArrow;
-
-	public CanvasScaler canvas;
-
-	public Canvas canvass;
-
-	private IEnumerator msgCoroutine;
-
-	public bool showOrbitParameters;
-
-	public PartDatabase partDatabase;
-
 	public void SetCameraDistance(float newDistance)
 	{
 		this.cameraDistanceGame = newDistance;
@@ -127,9 +25,11 @@ public class Controller : MonoBehaviour
 		Double3 @double = new Double3(-450.0, planetByName.radius + 30.0);
 		Ref.map.InitializeMap();
 		GameSaving.GameSave gameSave = GameSaving.GameSave.LoadPersistant();
-		if (Ref.lastScene == Ref.SceneType.Build)
+		bool flag = Ref.lastScene == Ref.SceneType.Build;
+		if (flag)
 		{
-			if (gameSave != null && gameSave.vessels.Count > 0)
+			bool flag2 = gameSave != null && gameSave.vessels.Count > 0;
+			if (flag2)
 			{
 				gameSave.velocityOffset = Double3.zero;
 				gameSave.selectedVesselId = -1;
@@ -139,8 +39,8 @@ public class Controller : MonoBehaviour
 			else
 			{
 				MonoBehaviour.print("There is No Persistant-Save, created rocket into new scene empty scene");
-				Ref.planetManager.SwitchLocation(planetByName, @double, false, true);
-				Ref.map.following = planetByName;
+				Ref.planetManager.SwitchLocation(planetByName, @double, false, true, 0.0);
+				Ref.map.following = new OrbitLines.Target(planetByName);
 				Ref.map.UpdateMapPosition(new Double3(0.0, @double.y / 10000.0));
 				Ref.map.UpdateMapZoom(@double.y / 10000.0 / 20.0);
 			}
@@ -149,22 +49,27 @@ public class Controller : MonoBehaviour
 			Ref.mapView = false;
 			Ref.controller.SetCameraDistance(23f);
 		}
-		else if (gameSave != null)
+		else
 		{
-			GameSaving.LoadGame(gameSave);
-			MonoBehaviour.print("No rocket to create, loaded persistant");
+			bool flag3 = gameSave != null;
+			if (flag3)
+			{
+				GameSaving.LoadGame(gameSave);
+				MonoBehaviour.print("No rocket to create, loaded persistant");
+			}
 		}
 	}
 
 	private void CreatePartsFromBuild(Double3 launchPadPosition)
 	{
 		Build.BuildSave buildSave = JsonUtility.FromJson<Build.BuildSave>(Ref.LoadJsonString(Saving.SaveKey.ToLaunch));
-		PartGrid.PositionForLaunch(buildSave.parts, this.partDatabase);
+		PartGrid.PositionForLaunch(buildSave.parts, this.partDatabase, buildSave.rotation);
 		List<Part> list = CreateRocket.CreateBuildParts((launchPadPosition - Ref.positionOffset).toVector3, buildSave, this.partDatabase);
 		List<Part> list2 = new List<Part>();
 		for (int i = 0; i < list.Count; i++)
 		{
-			if (list[i].GetComponent<ControlModule>() != null)
+			bool flag = list[i].GetComponent<ControlModule>() != null;
+			if (flag)
 			{
 				list2.Add(list[i]);
 			}
@@ -172,19 +77,11 @@ public class Controller : MonoBehaviour
 		list2.AddRange(list);
 		List<Vessel> list3 = this.CreateVesselsFromParts(list2, Vector2.zero, 0f, new Vessel.Throttle(false, 0.65f), new List<string>());
 		Ref.mainVessel = null;
-		foreach (Vessel current in list3)
+		Ref.mainVessel = list3[0];
+		Ref.map.SelectVessel(list3[0], false);
+		for (int j = 0; j < list.Count; j++)
 		{
-			if (current.controlAuthority)
-			{
-				Ref.mainVessel = current;
-				Ref.map.SelectVessel(current);
-				break;
-			}
-		}
-		if (Ref.mainVessel == null)
-		{
-			Ref.mainVessel = list3[0];
-			Ref.map.SelectVessel(list3[0]);
+			list[j].UpdateConnected();
 		}
 		Ref.map.UpdateVesselsMapIcons();
 		this.UpdateVesselButtons();
@@ -195,9 +92,10 @@ public class Controller : MonoBehaviour
 		List<Vessel> list = new List<Vessel>();
 		for (int i = 0; i < unatendedParts.Count; i++)
 		{
-			if (unatendedParts[i] != null && unatendedParts[i].vessel == null && unatendedParts[i].gameObject.activeSelf)
+			bool flag = unatendedParts[i] != null && unatendedParts[i].vessel == null && unatendedParts[i].gameObject.activeSelf;
+			if (flag)
 			{
-				Vessel item = Vessel.CreateVessel(unatendedParts[i], velocity, angularVecloty, throttle, inheritedArchivments, this.loadedPlanet.mapRefs.holder);
+				Vessel item = Vessel.CreateVessel(unatendedParts[i], velocity, angularVecloty, throttle, inheritedArchivments, Ref.map.mapRefs[this.loadedPlanet].holder);
 				list.Add(item);
 			}
 		}
@@ -211,7 +109,8 @@ public class Controller : MonoBehaviour
 
 	public void ShowMsg(string msgText, float displayTime)
 	{
-		if (this.msgCoroutine != null)
+		bool flag = this.msgCoroutine != null;
+		if (flag)
 		{
 			base.StopCoroutine(this.msgCoroutine);
 		}
@@ -219,22 +118,19 @@ public class Controller : MonoBehaviour
 		base.StartCoroutine(this.msgCoroutine);
 	}
 
-	[DebuggerHidden]
 	private IEnumerator MsgCoroutine(string msgText, float displayTime)
 	{
-        msgUI.text = msgText;
-        msgUI.gameObject.SetActive(true);
-
-        while (displayTime > 0)
-        {
-            displayTime -= Time.deltaTime;
-            msgUI.color = new Color(1, 1, 1, displayTime);
-
-            yield return new WaitForEndOfFrame();
-        }
-
-        msgUI.gameObject.SetActive(false);
-    }
+		this.msgUI.text = msgText;
+		this.msgUI.gameObject.SetActive(true);
+		while (displayTime > 0f)
+		{
+			displayTime -= Time.deltaTime;
+			this.msgUI.color = new Color(1f, 1f, 1f, displayTime);
+			yield return new WaitForEndOfFrame();
+		}
+		this.msgUI.gameObject.SetActive(false);
+		yield break;
+	}
 
 	public void Relaunch()
 	{
@@ -268,41 +164,50 @@ public class Controller : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-		if (Ref.timeWarping || Ref.mainVessel == null)
+		bool flag = Ref.timeWarping || Ref.mainVessel == null;
+		if (!flag)
 		{
-			return;
-		}
-		this.CheckPositionBounds();
-		if (Ref.velocityOffset.sqrMagnitude2d > 0.0)
-		{
-			Ref.planetManager.UpdatePositionOffset(Ref.positionOffset + Ref.velocityOffset * (double)Time.fixedDeltaTime);
-		}
-		this.enableVelocityOffset = this.GetEnableVelocityOffset(Ref.mainVessel);
-		if (this.enableVelocityOffset)
-		{
-			this.CheckVelocityBounds();
-		}
-		else if (Ref.velocityOffset.sqrMagnitude2d > 0.0)
-		{
-			this.OffsetSceneVelocity(-Ref.velocityOffset.toVector2);
+			this.CheckPositionBounds();
+			bool flag2 = Ref.velocityOffset.sqrMagnitude2d > 0.0;
+			if (flag2)
+			{
+				Ref.planetManager.UpdatePositionOffset(Ref.positionOffset + Ref.velocityOffset * (double)Time.fixedDeltaTime);
+			}
+			this.enableVelocityOffset = this.GetEnableVelocityOffset(Ref.mainVessel);
+			bool flag3 = this.enableVelocityOffset;
+			if (flag3)
+			{
+				this.CheckVelocityBounds();
+			}
+			else
+			{
+				bool flag4 = Ref.velocityOffset.sqrMagnitude2d > 0.0;
+				if (flag4)
+				{
+					this.OffsetSceneVelocity(-Ref.velocityOffset.toVector2);
+				}
+			}
 		}
 	}
 
 	private void Update()
 	{
-		if (this.regularUpdateTime < Time.time)
+		bool flag = this.regularUpdateTime < Time.time;
+		if (flag)
 		{
 			this.RegularUpdate();
 			this.regularUpdateTime = Time.time + 0.5f;
 		}
 		this.globalTime += (double)((float)this.warpSpeeds[this.timewarpPhase] * Time.deltaTime);
-		bool flag = Ref.mainVessel != null && Ref.mainVessel.orbits.Count > 0;
-		double num = (!flag) ? double.PositiveInfinity : Ref.mainVessel.orbits[0].stopTimeWarpTime;
-		if (flag)
+		bool flag2 = Ref.mainVessel != null && Ref.mainVessel.orbits.Count > 0;
+		double num = (!flag2) ? double.PositiveInfinity : Ref.mainVessel.orbits[0].stopTimeWarpTime;
+		bool flag3 = flag2;
+		if (flag3)
 		{
 			Ref.planetManager.UpdatePositionOffset(Ref.mainVessel.GetGlobalPosition.roundTo1000);
 		}
-		if (this.globalTime > num)
+		bool flag4 = this.globalTime > num;
+		if (flag4)
 		{
 			this.globalTime = num;
 			Ref.planetManager.UpdatePositionOffset(Ref.mainVessel.GetGlobalPosition.roundTo1000);
@@ -310,22 +215,24 @@ public class Controller : MonoBehaviour
 			this.DecelerateTime();
 			Ref.controller.ShowMsg("Cannot time warp below: " + this.loadedPlanet.minTimewarpHeightKm.ToString() + "km");
 		}
-      
 	}
 
 	private void RegularUpdate()
 	{
 		this.UpdateVesselButtons();
 		bool flag = Ref.timeWarping || Ref.mainVesselHeight > this.loadedPlanet.minTimewarpHeightKm * 1000.0 || (Ref.mainVessel != null && Ref.mainVessel.GetGlobalVelocity.magnitude2d < 0.10000000149011612 && Ref.mainVessel.OnSurface);
-		if (this.timewarpButtonColorMove.targetTime.floatValue == 1f != flag)
+		bool flag2 = this.timewarpButtonColorMove.targetTime.floatValue == 1f != flag;
+		if (flag2)
 		{
 			this.timewarpButtonColorMove.SetTargetTime((float)((!flag) ? 0 : 1));
-			if (flag && this.msgUI.color.a == 0f)
+			bool flag3 = flag && this.msgUI.color.a == 0f;
+			if (flag3)
 			{
 				this.ShowMsg("Time warp enabled");
 			}
 		}
-		if (this.updatedPersistantTime < Time.time)
+		bool flag4 = this.updatedPersistantTime < Time.time;
+		if (flag4)
 		{
 			this.updatedPersistantTime = Time.time + 15f;
 			GameSaving.GameSave.UpdatePersistantSave();
@@ -334,35 +241,38 @@ public class Controller : MonoBehaviour
 
 	private void LateUpdate()
 	{
-		double apo = 0.0;
-		double peri = 0.0;
-		if (Ref.mainVessel != null)
+		bool flag = Ref.mainVessel != null;
+		if (flag)
 		{
 			this.cameraPositionGame = ((!Ref.timeWarping) ? Ref.mainVessel.partsManager.rb2d.worldCenterOfMass : (Ref.mainVessel.GetGlobalPosition - Ref.positionOffset).toVector2);
 		}
-		if (!Ref.mapView)
+		bool flag2 = !Ref.mapView;
+		if (flag2)
 		{
 			this.scaledSpaceThreshold = ((Ref.mainVesselHeight <= 500000.0) ? 100000f : 5000f);
-			bool flag = this.cameraDistanceGame > this.scaledSpaceThreshold;
-			Ref.cam.cullingMask = ((!flag) ? this.gameView : this.scaledView);
-			if (!flag)
+			bool flag3 = this.cameraDistanceGame > this.scaledSpaceThreshold;
+			Ref.cam.cullingMask = ((!flag3) ? this.gameView : this.scaledView);
+			bool flag4 = !flag3;
+			if (flag4)
 			{
-				Ref.cam.transform.position = new Vector3(this.cameraPositionGame.x, this.cameraPositionGame.y, -this.cameraDistanceGame) + (Vector3)this.cameraOffset;
+				Ref.cam.transform.position = new Vector3(this.cameraPositionGame.x, this.cameraPositionGame.y, -this.cameraDistanceGame) + (Vector3)(this.cameraOffset + this.viewPositons);
 			}
 			else
 			{
-				Ref.cam.transform.position = ((Ref.positionOffset + new Double3((double)this.cameraPositionGame.x, (double)this.cameraPositionGame.y, (double)(-(double)this.cameraDistanceGame))) / 10000.0).toVector3;
+				Ref.cam.transform.position = ((Ref.positionOffset + new Double3((double)this.cameraPositionGame.x, (double)this.cameraPositionGame.y, -(double)this.cameraDistanceGame)) / 10000.0).toVector3;
 			}
-			if (flag)
+			bool flag5 = flag3;
+			if (flag5)
 			{
 				Ref.planetManager.PositionLowRezPlanets();
 			}
-			Ref.planetManager.scaledHolder.gameObject.SetActive(flag);
-			Ref.planetManager.chuncksHolder.gameObject.SetActive(!flag);
+			Ref.planetManager.scaledHolder.gameObject.SetActive(flag3);
+			Ref.planetManager.chuncksHolder.gameObject.SetActive(!flag3);
 		}
 		this.cameraOffset = Vector2.zero;
 		this.audioListener.transform.position = new Vector3(this.cameraPositionGame.x, this.cameraPositionGame.y, Ref.mapView ? (-Mathf.Max(this.cameraDistanceGame, 1000f)) : (-this.cameraDistanceGame));
-		if (Ref.mainVessel != null)
+		bool flag6 = Ref.mainVessel != null;
+		if (flag6)
 		{
 			Ref.mainVesselHeight = Ref.mainVessel.GetGlobalPosition.magnitude2d - this.loadedPlanet.radius;
 			Ref.mainVesselAngleToPlanet = (float)Math.Atan2(Ref.mainVessel.GetGlobalPosition.y, Ref.mainVessel.GetGlobalPosition.x) * 57.29578f;
@@ -372,89 +282,128 @@ public class Controller : MonoBehaviour
 		Ref.cam.transform.eulerAngles = new Vector3(0f, 0f, Mathf.SmoothDampAngle(Ref.cam.transform.eulerAngles.z, this.camTargetAngle, ref this.camAngularVelocity, 0.5f));
 		this.stars.transform.eulerAngles = new Vector3(0f, 0f, 100f);
 		Ref.map.UpdateCameraRotation(Ref.cam.transform.localEulerAngles);
-		this.UpdateUI((!(Ref.mainVessel != null)) ? 0.0 : Ref.mainVessel.GetGlobalVelocity.magnitude2d, (Ref.mainVesselTerrainHeight >= 2000.0) ? Ref.mainVesselHeight : Ref.mainVesselTerrainHeight, apo, peri, Ref.mainVesselTerrainHeight < 2000.0);
-		if (this.loadedPlanet.atmosphereData.hasAtmosphere)
+		this.UpdateUI((!(Ref.mainVessel != null)) ? 0.0 : Ref.mainVessel.GetGlobalVelocity.magnitude2d, (Ref.mainVesselTerrainHeight >= 2000.0) ? Ref.mainVesselHeight : Ref.mainVesselTerrainHeight, Ref.mainVesselTerrainHeight < 2000.0);
+		float num = (!this.loadedPlanet.atmosphereData.hasAtmosphere) ? 0f : Mathf.Clamp01((float)(Ref.mainVesselHeight / this.loadedPlanet.atmosphereData.atmosphereHeightM));
+		bool hasAtmosphere = this.loadedPlanet.atmosphereData.hasAtmosphere;
+		if (hasAtmosphere)
 		{
-			float num = Mathf.Clamp01((float)(Ref.mainVesselHeight / this.loadedPlanet.atmosphereData.atmosphereHeightM));
-			num = Mathf.Pow(num - 1f, 3f) + 1f;
-			Ref.partShader.SetFloat("_Intensity", Mathf.Lerp(this.loadedPlanet.atmosphereData.shadowIntensity, 1.7f, num));
+			float t = Mathf.Pow(num - 1f, 3f) + 1f;
+			Ref.partShader.SetFloat("_Intensity", Mathf.Lerp(this.loadedPlanet.atmosphereData.shadowIntensity, 1.7f, t));
 		}
-		if (Ref.timeWarping)
+		float num2 = (this.loadedPlanet.atmosphereData.atmosphereHeightKm != 30.0) ? 0f : (1f - num);
+		this.flameByHeightMaterial.SetColor("_Color", new Color(1f, 1f, 1f, Mathf.Clamp01(num2 * 1.5f)));
+		bool timeWarping = Ref.timeWarping;
+		if (timeWarping)
 		{
 			this.warpedTimeCounterUI.text = Ref.GetTimeString(this.globalTime - this.startedTimewarpTime);
 		}
 		this.SomeStuff();
 		Ref.cam.fieldOfView = 60f * ((Screen.width <= Screen.height) ? 1f : ((float)Screen.height / (float)Screen.width * 1.075f));
 		this.SetVelocityDirectionMarker((!(Ref.mainVessel != null)) ? Vector2.zero : (Vector2)(Quaternion.Euler(0f, 0f, -Ref.cam.transform.rotation.eulerAngles.z) * Ref.mainVessel.GetGlobalVelocity.toVector3));
+		bool flag7 = Ref.mainVessel != null && Ref.mainVessel.RCS;
+		bool flag8 = Ref.inputController.rcsInputsHolder.gameObject.activeSelf != flag7;
+		if (flag8)
+		{
+			Ref.inputController.rcsInputsHolder.gameObject.SetActive(flag7);
+		}
 	}
 
 	private void SomeStuff()
 	{
-		if (Input.GetKeyDown("."))
+		bool keyDown = Input.GetKeyDown(".");
+		if (keyDown)
 		{
 			this.AccelerateTime();
 		}
-		if (Input.GetKeyDown(","))
+		bool keyDown2 = Input.GetKeyDown(",");
+		if (keyDown2)
 		{
 			this.DecelerateTime();
 		}
-		if (Input.GetKeyDown("space") && !Ref.saving.savingMenuHolder.activeSelf)
+		bool flag = Input.GetKeyDown("space") && !Ref.saving.savingMenuHolder.activeSelf;
+		if (flag)
 		{
-			if (Ref.mainVessel.controlAuthority)
+			bool controlAuthority = Ref.mainVessel.controlAuthority;
+			if (controlAuthority)
 			{
 				this.ToggleThrottle();
 			}
-			else if (Ref.controller.msgUI.color.a < 0.6f)
+			else
 			{
-				Ref.controller.ShowMsg("No control");
+				bool flag2 = Ref.controller.msgUI.color.a < 0.6f;
+				if (flag2)
+				{
+					Ref.controller.ShowMsg("No control");
+				}
 			}
 		}
-        
-		if (Input.GetAxisRaw("Vertical") != 0f)
+		bool flag3 = Input.GetAxisRaw("Vertical") != 0f;
+		if (flag3)
 		{
-			if (Ref.mainVessel.controlAuthority)
+			bool controlAuthority2 = Ref.mainVessel.controlAuthority;
+			if (controlAuthority2)
 			{
 				Ref.mainVessel.SetThrottle(new Vessel.Throttle(Ref.mainVessel.throttle.throttleOn, Mathf.Clamp01(Ref.mainVessel.throttle.throttleRaw + Input.GetAxisRaw("Vertical") / 2f * Time.deltaTime)));
-				if (Ref.inputController.instructionSlideThrottleHolder.activeSelf)
+				bool activeSelf = Ref.inputController.instructionSlideThrottleHolder.activeSelf;
+				if (activeSelf)
 				{
 					Ref.inputController.instructionSlideThrottleHolder.SetActive(false);
 					Ref.inputController.CheckAllInstructions();
 				}
 			}
-			else if (Ref.controller.msgUI.color.a < 0.6f)
+			else
 			{
-				Ref.controller.ShowMsg("No control");
+				bool flag4 = Ref.controller.msgUI.color.a < 0.6f;
+				if (flag4)
+				{
+					Ref.controller.ShowMsg("No control");
+				}
 			}
 		}
-		if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+		bool flag5 = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+		if (flag5)
 		{
-			if (Ref.mainVessel.controlAuthority)
+			bool controlAuthority3 = Ref.mainVessel.controlAuthority;
+			if (controlAuthority3)
 			{
 				Ref.mainVessel.SetThrottle(new Vessel.Throttle(Ref.mainVessel.throttle.throttleOn, Mathf.Clamp01(Ref.mainVessel.throttle.throttleRaw + 0.5f * Time.deltaTime)));
 			}
-			else if (Ref.controller.msgUI.color.a < 0.6f)
+			else
 			{
-				Ref.controller.ShowMsg("No control");
+				bool flag6 = Ref.controller.msgUI.color.a < 0.6f;
+				if (flag6)
+				{
+					Ref.controller.ShowMsg("No control");
+				}
 			}
 		}
-		if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+		bool flag7 = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+		if (flag7)
 		{
-			if (Ref.mainVessel.controlAuthority)
+			bool controlAuthority4 = Ref.mainVessel.controlAuthority;
+			if (controlAuthority4)
 			{
 				Ref.mainVessel.SetThrottle(new Vessel.Throttle(Ref.mainVessel.throttle.throttleOn, Mathf.Clamp01(Ref.mainVessel.throttle.throttleRaw - 0.5f * Time.deltaTime)));
 			}
-			else if (Ref.controller.msgUI.color.a < 0.6f)
+			else
 			{
-				Ref.controller.ShowMsg("No control");
+				bool flag8 = Ref.controller.msgUI.color.a < 0.6f;
+				if (flag8)
+				{
+					Ref.controller.ShowMsg("No control");
+				}
 			}
 		}
-		if (Input.GetKeyDown("i"))
+		bool keyDown3 = Input.GetKeyDown("u");
+		if (keyDown3)
 		{
+			this.topRightText.transform.parent.gameObject.SetActive(!Ref.inputController.switchToButton.transform.parent.parent.gameObject.activeSelf);
+			this.bottomLeftHolder.gameObject.SetActive(!Ref.inputController.switchToButton.transform.parent.parent.gameObject.activeSelf);
 			Ref.inputController.switchToButton.transform.parent.parent.gameObject.SetActive(!Ref.inputController.switchToButton.transform.parent.parent.gameObject.activeSelf);
 		}
 	}
 
-	[Button("Take screenshot", ButtonSizes.Small)]
+	[Button("Take screenshot", 0)]
 	private void A()
 	{
 		ScreenCapture.CaptureScreenshot("Assets/Screenshots/Screenshot" + UnityEngine.Random.Range(0, 100000).ToString() + ".png");
@@ -483,105 +432,128 @@ public class Controller : MonoBehaviour
 
 	public void SwitchVessel(Vessel newVessel)
 	{
-		if (newVessel == null || newVessel == Ref.mainVessel)
+		bool flag = newVessel == null || newVessel == Ref.mainVessel;
+		if (!flag)
 		{
-			return;
+			Vessel mainVessel = Ref.mainVessel;
+			Ref.mainVessel = newVessel;
+			Ref.map.UpdateVesselsMapIcons();
+			Double3 getGlobalPosition = newVessel.GetGlobalPosition;
+			CelestialBodyData getVesselPlanet = newVessel.GetVesselPlanet;
+			Ref.map.SelectVessel(Ref.selectedVessel, true);
+			this.RepositionFuelIcons();
+			this.UpdateVesselButtons();
+			Ref.map.following = new OrbitLines.Target(newVessel.GetVesselPlanet);
+			Ref.map.UpdateMapPosition(newVessel.GetGlobalPosition / 10000.0);
+			Ref.map.UpdateMapZoom(Ref.map.mapPosition.z);
+			newVessel.SetThrottle(newVessel.throttle);
+			bool flag2 = newVessel.GetGlobalPosition.magnitude2d < newVessel.GetVesselPlanet.radius + newVessel.GetVesselPlanet.minTimewarpHeightKm * 1000.0;
+			foreach (Vessel vessel in Ref.controller.vessels)
+			{
+				vessel.SetVesselState(Vessel.ToState.ToUnloaded);
+			}
+			Vessel.ToState toState = (Ref.timeWarping && !flag2) ? Vessel.ToState.ToTimewarping : Vessel.ToState.ToRealTime;
+			Ref.planetManager.SwitchLocation(getVesselPlanet, getGlobalPosition, false, true, 0.0);
+			bool flag3 = Ref.timeWarping && flag2;
+			if (flag3)
+			{
+				this.timewarpPhase = 1;
+				this.DecelerateTime();
+				Ref.controller.ShowMsg("Cannot time warp below: " + newVessel.GetVesselPlanet.minTimewarpHeightKm.ToString() + "km");
+			}
+			else
+			{
+				bool flag4 = toState == Vessel.ToState.ToRealTime;
+				if (flag4)
+				{
+					bool flag5 = this.GetEnableVelocityOffset(Ref.mainVessel);
+					double x = (!flag5) ? 0.0 : (Math.Floor((Math.Abs(Ref.mainVessel.GetGlobalVelocity.x) + 25.0) / 50.0) * 50.0 * (double)Math.Sign(Ref.mainVessel.GetGlobalVelocity.x));
+					double y = (!flag5) ? 0.0 : (Math.Floor((Math.Abs(Ref.mainVessel.GetGlobalVelocity.y) + 25.0) / 50.0) * 50.0 * (double)Math.Sign(Ref.mainVessel.GetGlobalVelocity.y));
+					Ref.velocityOffset = new Double3(x, y);
+				}
+				Ref.mainVessel.SetVesselState(toState);
+			}
+			Ref.mainVessel.SetThrottle(new Vessel.Throttle(false, newVessel.throttle.throttleRaw));
+			bool flag6 = mainVessel != null;
+			if (flag6)
+			{
+				Ref.map.SelectVessel(mainVessel, false);
+			}
+			Ref.planetManager.totalDistanceMoved += 100000.0;
 		}
-		Ref.mainVessel = newVessel;
-		Ref.map.UpdateVesselsMapIcons();
-		Double3 getGlobalPosition = newVessel.GetGlobalPosition;
-		CelestialBodyData getVesselPlanet = newVessel.GetVesselPlanet;
-		Ref.map.SelectVessel(Ref.selectedVessel);
-		this.RepositionFuelIcons();
-		this.UpdateVesselButtons();
-		Ref.map.following = newVessel.GetVesselPlanet;
-		Ref.map.UpdateMapPosition(newVessel.GetGlobalPosition / 10000.0);
-		Ref.map.UpdateMapZoom(Ref.map.mapPosition.z);
-		newVessel.SetThrottle(newVessel.throttle);
-		bool flag = newVessel.GetGlobalPosition.magnitude2d < newVessel.GetVesselPlanet.radius + newVessel.GetVesselPlanet.minTimewarpHeightKm * 1000.0;
-		Vessel.ToState toState = (Ref.timeWarping && !flag) ? Vessel.ToState.ToTimewarping : Vessel.ToState.ToRealTime;
-		Ref.planetManager.SwitchLocation(getVesselPlanet, getGlobalPosition, false, true);
-		bool flag2 = toState == Vessel.ToState.ToRealTime && this.GetEnableVelocityOffset(newVessel);
-		double x = (!flag2) ? 0.0 : (Math.Floor((Math.Abs(Ref.mainVessel.GetGlobalVelocity.x) + 25.0) / 50.0) * 50.0 * (double)Math.Sign(Ref.mainVessel.GetGlobalVelocity.x));
-		double y = (!flag2) ? 0.0 : (Math.Floor((Math.Abs(Ref.mainVessel.GetGlobalVelocity.y) + 25.0) / 50.0) * 50.0 * (double)Math.Sign(Ref.mainVessel.GetGlobalVelocity.y));
-		Ref.velocityOffset = new Double3(x, y);
-		if (Ref.timeWarping && flag)
-		{
-			this.timewarpPhase = 1;
-			this.DecelerateTime();
-			Ref.controller.ShowMsg("Cannot time warp below: " + newVessel.GetVesselPlanet.minTimewarpHeightKm.ToString() + "km");
-		}
-		Ref.mainVessel.SetThrottle(new Vessel.Throttle(false, newVessel.throttle.throttleRaw));
-		newVessel.SetVesselState(toState);
-		Ref.planetManager.totalDistanceMoved += 100000.0;
 	}
 
 	public void StartRecovery()
 	{
 		Ref.inputController.leftArrow.parent.gameObject.SetActive(false);
-		foreach (EngineModule.FuelIcon current in Ref.controller.fuelIcons)
-		{
-			if (current.icon != null)
-			{
-				current.icon.gameObject.SetActive(false);
-			}
-		}
+		this.fuelIconsHolder.gameObject.SetActive(false);
 		Vessel vessel = (!Ref.mapView) ? Ref.mainVessel : Ref.selectedVessel;
 		Ref.inputController.recoverMenuHolder.transform.GetChild(8).GetChild(1).GetComponent<Text>().text = ((!(vessel == Ref.mainVessel)) ? "Complete Recovery" : "Complete Mission");
 		List<string> list = (!(vessel != null)) ? new List<string>() : new List<string>(vessel.vesselAchievements);
-		if (list.Contains("Reached 10 km altitude.") && list.Count > 2)
+		bool flag = list.Contains("Reached 10 km altitude.") && list.Count > 2;
+		if (flag)
 		{
 			list.Remove("Reached 5 km altitude.");
 		}
-		if (list.Contains("Reached 15 km altitude.") && list.Count > 2)
+		bool flag2 = list.Contains("Reached 15 km altitude.") && list.Count > 2;
+		if (flag2)
 		{
 			list.Remove("Reached 10 km altitude.");
 		}
-		if (list.Contains("Passed the Karman Line, leaving the /atmosphere and reaching space.") && list.Count > 2)
+		bool flag3 = list.Contains("Passed the Karman Line, leaving the /atmosphere and reaching space.") && list.Count > 2;
+		if (flag3)
 		{
 			list.Remove("Reached 15 km altitude.");
 		}
-		if (list.Contains("Reached low " + Ref.controller.startAdress + " orbit.") && list.Count > 4)
+		bool flag4 = list.Contains("Reached low " + Ref.controller.startAdress + " orbit.") && list.Count > 4;
+		if (flag4)
 		{
 			list.Remove("Passed the Karman Line, leaving the /atmosphere and reaching space.");
 		}
 		Ref.inputController.recoverMenuHolder.SetActive(true);
-		bool flag = Ref.inputController.canvasScaler.referenceResolution.x == 750f;
+		bool flag5 = Ref.inputController.canvasScalers[0].referenceResolution.x == 750f;
 		Text component = Ref.inputController.recoverMenuHolder.transform.GetChild(4).GetComponent<Text>();
 		Text component2 = Ref.inputController.recoverMenuHolder.transform.GetChild(6).GetComponent<Text>();
 		component.transform.localPosition = new Vector3(0f, component.transform.localPosition.y);
 		Ref.inputController.recoverMenuHolder.transform.GetChild(3).localPosition = new Vector3(0f, component.transform.localPosition.y + 10f);
 		Ref.inputController.recoverMenuHolder.transform.GetChild(5).localPosition = new Vector3(5000f, component.transform.localPosition.y + 10f);
-		Ref.inputController.recoverMenuHolder.transform.GetChild(3).localScale = new Vector3(1f, (!flag) ? 0.51f : 1f);
-		Ref.inputController.recoverMenuHolder.transform.GetChild(5).localScale = new Vector3(1f, (!flag) ? 0.51f : 1f);
+		Ref.inputController.recoverMenuHolder.transform.GetChild(3).localScale = new Vector3(1f, (!flag5) ? 0.51f : 1f);
+		Ref.inputController.recoverMenuHolder.transform.GetChild(5).localScale = new Vector3(1f, (!flag5) ? 0.51f : 1f);
 		component.text = string.Empty;
 		component2.text = string.Empty;
 		int num = 0;
 		Text text = component;
-		foreach (string current2 in list)
+		foreach (string text2 in list)
 		{
-			Text expr_36B = text;
-			expr_36B.text += "- ";
-			for (int i = 0; i < current2.Length; i++)
+			Text text3 = text;
+			Text text4 = text3;
+			text4.text += "- ";
+			for (int i = 0; i < text2.Length; i++)
 			{
-				if (current2[i].ToString() == "/")
+				bool flag6 = text2[i].ToString() == "/";
+				if (flag6)
 				{
-					Text expr_3B1 = text;
-					expr_3B1.text += "\r\n \r\n ";
+					Text text5 = text;
+					Text text6 = text5;
+					text6.text += "\r\n \r\n ";
 					num += 2;
 				}
 				else
 				{
-					Text expr_3D3 = text;
-					expr_3D3.text += current2[i].ToString();
+					Text text7 = text;
+					Text text8 = text7;
+					text8.text += text2[i].ToString();
 				}
 			}
-			Text expr_411 = text;
-			expr_411.text += "\r\n \r\n \r\n";
+			Text text9 = text;
+			Text text10 = text9;
+			text10.text += "\r\n \r\n \r\n";
 			num += 3;
-			if (num > ((!flag) ? 24 : 51))
+			bool flag7 = num > ((!flag5) ? 24 : 51);
+			if (flag7)
 			{
-				if (text == component2 || flag)
+				bool flag8 = text == component2 || flag5;
+				if (flag8)
 				{
 					break;
 				}
@@ -599,54 +571,71 @@ public class Controller : MonoBehaviour
 	{
 		Vessel vessel = (!Ref.mapView) ? Ref.mainVessel : Ref.selectedVessel;
 		bool flag = vessel == Ref.mainVessel;
-		if (vessel == null)
+		bool flag2 = vessel == null;
+		if (!flag2)
 		{
-			return;
+			bool flag3 = !vessel.OnSurface;
+			if (!flag3)
+			{
+				this.aaa(vessel);
+				vessel.DestroyVessel();
+				bool flag4 = flag;
+				if (flag4)
+				{
+					this.ExitGameScene();
+				}
+				else
+				{
+					this.CancelRecovery();
+				}
+				this.UpdateVesselButtons();
+			}
 		}
-		if (!vessel.OnSurface)
+	}
+
+	public void AskEliminateDebris()
+	{
+		string warning = Utility.SplitLines("Are you sure you want to clear debris?//This will destroy ALL rockets without a capsule or a probe");
+		Ref.warning.ShowWarning(warning, new Vector2(1300f, 335f), "Clear Debris", new Warning.EmptyDelegate(this.ConfirmEliminateDebris), "Cancel", null, 180);
+	}
+
+	private void ConfirmEliminateDebris()
+	{
+		for (int i = 0; i < this.vessels.Count; i++)
 		{
-			return;
+			bool flag = !this.vessels[i].controlAuthority;
+			if (flag)
+			{
+				this.vessels[i].DestroyVessel();
+				i--;
+			}
 		}
-		this.aaa(vessel);
-		vessel.DestroyVessel();
-		if (flag)
-		{
-			this.ExitGameScene();
-		}
-		else
-		{
-			this.CancelRecovery();
-		}
-		this.UpdateVesselButtons();
 	}
 
 	private void aaa(Vessel vesselToRecover)
 	{
-
+		bool flag = vesselToRecover.vesselAchievements.Contains("Passed the Karman Line, leaving the /atmosphere and reaching space.");
+		if (flag)
+		{
+		}
 	}
 
 	public void CancelRecovery()
 	{
 		Ref.inputController.recoverMenuHolder.SetActive(false);
 		Ref.inputController.leftArrow.parent.gameObject.SetActive(true);
-		foreach (EngineModule.FuelIcon current in Ref.controller.fuelIcons)
-		{
-			if (current.icon != null)
-			{
-				current.icon.gameObject.SetActive(true);
-			}
-		}
+		this.fuelIconsHolder.gameObject.SetActive(true);
 	}
 
 	public void DestroySelectedVessel()
 	{
-		if (Ref.selectedVessel == null || Ref.selectedVessel == Ref.mainVessel)
+		bool flag = Ref.selectedVessel == null || Ref.selectedVessel == Ref.mainVessel;
+		if (!flag)
 		{
-			return;
+			this.HideArrowButtons();
+			string warning = Utility.SplitLines("Are you sure you want to destroy the selected rocket?");
+			Ref.warning.ShowWarning(warning, new Vector2(1220f, 175f), "Destroy", new Warning.EmptyDelegate(this.ConfirmVesselDestroy), "Cancel", new Warning.EmptyDelegate(this.ShowArrowButtons), 160);
 		}
-		this.HideArrowButtons();
-		string warning = Utility.SplitLines("Are you sure you want to destroy the selected rocket?");
-		Ref.warning.ShowWarning(warning, new Vector2(1220f, 175f), "Destroy", new Warning.EmptyDelegate(this.ConfirmVesselDestroy), "Cancel", new Warning.EmptyDelegate(this.ShowArrowButtons), 160);
 	}
 
 	public void ConfirmVesselDestroy()
@@ -668,114 +657,145 @@ public class Controller : MonoBehaviour
 
 	public void ToggleThrottle()
 	{
-		if (Ref.timeWarping)
+		bool timeWarping = Ref.timeWarping;
+		if (timeWarping)
 		{
 			Ref.controller.ShowMsg("Cannot toggle throttle while time warping");
-			return;
 		}
-		if (!Ref.mainVessel.controlAuthority)
+		else
 		{
-			Ref.controller.ShowMsg("No control");
-			return;
-		}
-		Ref.mainVessel.SetThrottle(new Vessel.Throttle(!Ref.mainVessel.throttle.throttleOn, Ref.mainVessel.throttle.throttleRaw));
-		if (Ref.inputController.instructionToggleThrottleHolder.activeSelf)
-		{
-			Ref.inputController.instructionToggleThrottleHolder.SetActive(false);
-			Ref.inputController.CheckAllInstructions();
-		}
-		if (Ref.mainVessel.throttle.throttleRaw != 0f)
-		{
-			foreach (EngineModule current in Ref.mainVessel.partsManager.engineModules)
+			bool flag = !Ref.mainVessel.controlAuthority;
+			if (flag)
 			{
-				if (current.engineOn.boolValue)
+				Ref.controller.ShowMsg("No control");
+			}
+			else
+			{
+				Ref.mainVessel.SetThrottle(new Vessel.Throttle(!Ref.mainVessel.throttle.throttleOn, Ref.mainVessel.throttle.throttleRaw));
+				bool activeSelf = Ref.inputController.instructionToggleThrottleHolder.activeSelf;
+				if (activeSelf)
 				{
-					return;
+					Ref.inputController.instructionToggleThrottleHolder.SetActive(false);
+					Ref.inputController.CheckAllInstructions();
 				}
+				bool flag2 = Ref.mainVessel.throttle.throttleRaw != 0f;
+				if (flag2)
+				{
+					foreach (EngineModule engineModule in Ref.mainVessel.partsManager.engineModules)
+					{
+						bool boolValue = engineModule.engineOn.boolValue;
+						if (boolValue)
+						{
+							return;
+						}
+					}
+				}
+				Ref.inputController.PlayClickSound(0.6f);
 			}
 		}
-		Ref.inputController.PlayClickSound(0.6f);
 	}
 
-	private void UpdateUI(double velocity, double height, double apo, double peri, bool terrainHeight)
+	private void UpdateUI(double velocity, double height, bool terrainHeight)
 	{
-		bool flag = velocity < 1000.0;
+		float d = (Screen.height <= Screen.width) ? 1f : ((float)Screen.width / (float)Screen.height * 1.77f);
+		this.topRightText.transform.parent.localScale = Vector3.one * d;
+		this.bottomLeftHolder.localScale = Vector3.one * d;
+		Vector3 vector = Utility.CameraRelativePosition(Ref.cam.fieldOfView, new Vector3(0f, 0f, 1f));
+		this.bottomLeftHolder.localPosition = vector;
+		this.topRightText.transform.parent.localPosition = new Vector3(-vector.x, -vector.y, vector.z);
+		bool flag = velocity < 100.0;
 		string text = ((int)velocity).ToString();
-		if (flag && ((int)(velocity * 10.0) % 10 != 0 || (int)velocity != 0))
+		bool flag2 = flag && ((int)(velocity * 10.0) % 10 != 0 || (int)velocity != 0);
+		if (flag2)
 		{
 			text = text + "." + ((int)(velocity * 10.0) % 10).ToString();
 		}
-		this.velocityUI.text = "Velocity: " + text + "m/s";
-		if (height < 0.0)
+		this.topRightText.text = string.Concat(new string[]
 		{
-			height = 0.0;
-		}
-		this.heightUI.text = ((!terrainHeight) ? "Height: " : "Height (Terrain): ") + this.RoundUI(Math.Max(0.0, height));
-		if (!this.showOrbitParameters)
-		{
-			return;
-		}
-		this.apoapsisUI.text = "Apoapsis: " + this.RoundUI(apo);
-		this.periapsisUI.text = "Periapsis: " + this.RoundUI(peri);
+			(!terrainHeight) ? "Height: " : "Height (Terrain): ",
+			this.RoundUI(Math.Max(0.0, height)),
+			"\n Velocity: ",
+			text,
+			"m/s"
+		});
 	}
 
 	private void SetVelocityDirectionMarker(Vector2 velocity)
 	{
 		bool flag = velocity.sqrMagnitude > 4f && !Ref.mapView;
-		this.directionArrow.gameObject.SetActive(flag);
-		if (!flag)
+		bool flag2 = this.directionArrow.gameObject.activeSelf != flag;
+		if (flag2)
 		{
-			return;
+			this.directionArrow.gameObject.SetActive(flag);
 		}
-		this.directionArrow.eulerAngles = new Vector3(0f, 0f, (float)Math.Atan2((double)velocity.y, (double)velocity.x) * 57.29578f - 90f);
-		float num = this.canvas.referenceResolution.x / 2f - 24f;
-		float num2 = this.velocityUI.rectTransform.localPosition.y - 56f;
-		Vector3 vector = velocity;
-		vector *= num / Mathf.Abs(vector.x);
-		if (Mathf.Abs(vector.y) > num2)
+		bool flag3 = !flag;
+		if (!flag3)
 		{
-			vector *= num2 / Mathf.Abs(vector.y);
+			this.directionArrow.eulerAngles = new Vector3(0f, 0f, (float)Math.Atan2((double)velocity.y, (double)velocity.x) * 57.29578f - 90f);
+			float num = (Screen.height <= Screen.width) ? 1f : ((float)Screen.width / (float)Screen.height * 1.77f);
+			Vector3 vector = Utility.CameraRelativePosition(Ref.cam.fieldOfView, new Vector3(0f, 0f, 1f));
+			float num2 = -vector.x - 0.02f * num;
+			float num3 = -vector.y - 0.1f * num;
+			Vector3 vector2 = velocity;
+			vector2 *= num2 / Mathf.Abs(vector2.x);
+			bool flag4 = Mathf.Abs(vector2.y) > num3;
+			if (flag4)
+			{
+				vector2 *= num3 / Mathf.Abs(vector2.y);
+			}
+			this.directionArrow.localPosition = new Vector3(vector2.x, vector2.y, 1f);
 		}
-		this.directionArrow.localPosition = vector;
 	}
 
 	public string RoundUI(double value)
 	{
 		string str = string.Empty;
+		bool flag = value < 100.0;
 		int num;
-		if (value < 100.0)
+		if (flag)
 		{
 			str = "m";
 			num = 1;
-		}
-		else if (value < 10000.0)
-		{
-			str = "m";
-			num = 0;
-		}
-		else if (value < 100000000.0)
-		{
-			num = 1;
-			value /= 1000.0;
-			str = "km";
 		}
 		else
 		{
-			num = 2;
-			value /= 1000000.0;
-			str = "Mm";
+			bool flag2 = value < 10000.0;
+			if (flag2)
+			{
+				str = "m";
+				num = 0;
+			}
+			else
+			{
+				bool flag3 = value < 100000000.0;
+				if (flag3)
+				{
+					num = 1;
+					value /= 1000.0;
+					str = "km";
+				}
+				else
+				{
+					num = 2;
+					value /= 1000000.0;
+					str = "Mm";
+				}
+			}
 		}
 		int num2 = Ref.GetFigure(value);
-		if (num2 == 0)
+		bool flag4 = num2 == 0;
+		if (flag4)
 		{
 			num2 = 1;
 		}
-		if (num != 0)
+		bool flag5 = num != 0;
+		if (flag5)
 		{
 			num2 += num + 1;
 		}
 		string text = value.ToString();
-		if (num2 > text.Length)
+		bool flag6 = num2 > text.Length;
+		if (flag6)
 		{
 			text += ".0";
 		}
@@ -784,19 +804,23 @@ public class Controller : MonoBehaviour
 
 	private void CheckPositionBounds()
 	{
-		if (Ref.mainVessel.partsManager.rb2d.position.y > 1000f)
+		bool flag = Ref.mainVessel.partsManager.rb2d.position.y > 1000f;
+		if (flag)
 		{
 			this.OffsetScenePosition(new Vector2(0f, 2000f));
 		}
-		if (Ref.mainVessel.partsManager.rb2d.position.y < -1000f)
+		bool flag2 = Ref.mainVessel.partsManager.rb2d.position.y < -1000f;
+		if (flag2)
 		{
 			this.OffsetScenePosition(new Vector2(0f, -2000f));
 		}
-		if (Ref.mainVessel.partsManager.rb2d.position.x > 1000f)
+		bool flag3 = Ref.mainVessel.partsManager.rb2d.position.x > 1000f;
+		if (flag3)
 		{
 			this.OffsetScenePosition(new Vector2(2000f, 0f));
 		}
-		if (Ref.mainVessel.partsManager.rb2d.position.x < -1000f)
+		bool flag4 = Ref.mainVessel.partsManager.rb2d.position.x < -1000f;
+		if (flag4)
 		{
 			this.OffsetScenePosition(new Vector2(-2000f, 0f));
 		}
@@ -805,7 +829,8 @@ public class Controller : MonoBehaviour
 	private void CheckVelocityBounds()
 	{
 		Vector2 velocity = Ref.mainVessel.partsManager.rb2d.velocity;
-		if (Mathf.Abs(velocity.x) > 25f || Mathf.Abs(velocity.y) > 25f)
+		bool flag = Mathf.Abs(velocity.x) > 25f || Mathf.Abs(velocity.y) > 25f;
+		if (flag)
 		{
 			float x = Mathf.Floor((Mathf.Abs(velocity.x) + 25f) / 50f) * 50f * Mathf.Sign(velocity.x);
 			float y = Mathf.Floor((Mathf.Abs(velocity.y) + 25f) / 50f) * 50f * Mathf.Sign(velocity.y);
@@ -816,18 +841,20 @@ public class Controller : MonoBehaviour
 	public void OffsetScenePosition(Vector2 change)
 	{
 		Ref.planetManager.UpdatePositionOffset(Ref.positionOffset + new Double3((double)change.x, (double)change.y));
-		foreach (Vessel current in this.vessels)
+		foreach (Vessel vessel in this.vessels)
 		{
-			if (current.state == Vessel.State.RealTime)
+			bool flag = vessel.state == Vessel.State.RealTime;
+			if (flag)
 			{
-				current.partsManager.rb2d.position -= change;
-				foreach (Part current2 in current.partsManager.parts)
+				vessel.partsManager.rb2d.position -= change;
+				foreach (Part part in vessel.partsManager.parts)
 				{
-					for (int i = 0; i < current2.modules.Length; i++)
+					for (int i = 0; i < part.modules.Length; i++)
 					{
-						if (current2.modules[i] is ParachuteModule)
+						bool flag2 = part.modules[i] is ParachuteModule;
+						if (flag2)
 						{
-							(current2.modules[i] as ParachuteModule).lastPos -= (Vector3)change;
+							(part.modules[i] as ParachuteModule).lastPos -= (Vector3)change;
 						}
 					}
 				}
@@ -838,66 +865,77 @@ public class Controller : MonoBehaviour
 	public void OffsetSceneVelocity(Vector2 change)
 	{
 		Ref.velocityOffset += new Double3((double)change.x, (double)change.y);
-		foreach (Vessel current in this.vessels)
+		foreach (Vessel vessel in this.vessels)
 		{
-			if (current.state == Vessel.State.RealTime)
+			bool flag = vessel.state == Vessel.State.RealTime;
+			if (flag)
 			{
-				current.partsManager.rb2d.velocity -= change;
+				vessel.partsManager.rb2d.velocity -= change;
 			}
 		}
 	}
 
 	public void DecelerateTime()
 	{
-		if (this.timewarpPhase != 0)
+		bool flag = this.timewarpPhase != 0;
+		if (flag)
 		{
 			this.timewarpPhase--;
 			this.ShowMsg(this.warpSpeeds[this.timewarpPhase].ToString() + "x Time acceleration");
-			if (this.timewarpPhase == 0 && Ref.timeWarping)
+			bool flag2 = this.timewarpPhase == 0 && Ref.timeWarping;
+			if (flag2)
 			{
 				this.ExitTimeWarpMode();
 			}
-			return;
 		}
-		Ref.inputController.instructionsTimewarp.SetActive(false);
+		else
+		{
+			Ref.inputController.instructionsTimewarp.SetActive(false);
+		}
 	}
 
 	public void AccelerateTime()
 	{
 		Ref.inputController.instructionsTimewarp.SetActive(false);
-		if (Ref.mainVesselHeight < this.loadedPlanet.minTimewarpHeightKm * 1000.0 && !Ref.timeWarping)
+		bool flag = Ref.mainVesselHeight < this.loadedPlanet.minTimewarpHeightKm * 1000.0 && !Ref.timeWarping;
+		if (flag)
 		{
-			if (!Ref.mainVessel.OnSurface)
+			bool flag2 = !Ref.mainVessel.OnSurface;
+			if (flag2)
 			{
 				this.ShowMsg("Cannot time warp below " + this.loadedPlanet.minTimewarpHeightKm.ToString() + "km");
 				return;
 			}
-			if (Ref.mainVessel.GetGlobalVelocity.magnitude2d >= 0.05000000074505806)
+			bool flag3 = Ref.mainVessel.GetGlobalVelocity.magnitude2d >= 0.05000000074505806;
+			if (flag3)
 			{
 				this.ShowMsg("Cannot time warp while moving on the surface");
 				return;
 			}
 		}
-		if (Ref.mainVessel.throttle.throttleOn && Ref.mainVessel.throttle.throttleRaw > 0f)
+		bool flag4 = Ref.mainVessel.throttle.throttleOn && Ref.mainVessel.throttle.throttleRaw > 0f;
+		if (flag4)
 		{
-			foreach (EngineModule current in Ref.mainVessel.partsManager.engineModules)
+			foreach (EngineModule engineModule in Ref.mainVessel.partsManager.engineModules)
 			{
-				if (current.engineOn.boolValue)
+				bool boolValue = engineModule.engineOn.boolValue;
+				if (boolValue)
 				{
 					this.ShowMsg("Cannot time warp while under acceleration");
 					return;
 				}
 			}
 		}
-		if (this.timewarpPhase == this.warpSpeeds.Length - 1)
+		bool flag5 = this.timewarpPhase == this.warpSpeeds.Length - 1;
+		if (!flag5)
 		{
-			return;
-		}
-		this.timewarpPhase++;
-		this.ShowMsg(this.warpSpeeds[this.timewarpPhase].ToString() + "x Time acceleration");
-		if (!Ref.timeWarping)
-		{
-			this.EnterTimeWarpMode();
+			this.timewarpPhase++;
+			this.ShowMsg(this.warpSpeeds[this.timewarpPhase].ToString() + "x Time acceleration");
+			bool flag6 = !Ref.timeWarping;
+			if (flag6)
+			{
+				this.EnterTimeWarpMode();
+			}
 		}
 	}
 
@@ -907,18 +945,16 @@ public class Controller : MonoBehaviour
 		this.startedTimewarpTime = this.globalTime;
 		Ref.mainVessel.SetThrottle(new Vessel.Throttle(false, Ref.mainVessel.throttle.throttleRaw));
 		this.warpedTimeCounterUI.text = "0s";
-		foreach (Vessel current in Ref.controller.vessels)
+		foreach (Vessel vessel in Ref.controller.vessels)
 		{
-			if (current.state == Vessel.State.RealTime)
+			bool flag = vessel.state == Vessel.State.RealTime;
+			if (flag)
 			{
-				current.SetVesselState(Vessel.ToState.ToTimewarping);
+				vessel.SetVesselState(Vessel.ToState.ToTimewarping);
 			}
 		}
 		Ref.velocityOffset = Double3.zero;
-		if (Ref.selectedVessel != null)
-		{
-			Ref.map.UpdateVesselOrbitLines(Ref.selectedVessel.orbits, true);
-		}
+		Ref.map.DrawOrbitLines();
 	}
 
 	public void ExitTimeWarpMode()
@@ -931,15 +967,17 @@ public class Controller : MonoBehaviour
 		double x = (!flag) ? 0.0 : (Math.Floor((Math.Abs(Ref.mainVessel.GetGlobalVelocity.x) + 25.0) / 50.0) * 50.0 * (double)Math.Sign(Ref.mainVessel.GetGlobalVelocity.x));
 		double y = (!flag) ? 0.0 : (Math.Floor((Math.Abs(Ref.mainVessel.GetGlobalVelocity.y) + 25.0) / 50.0) * 50.0 * (double)Math.Sign(Ref.mainVessel.GetGlobalVelocity.y));
 		Ref.velocityOffset = new Double3(x, y);
-		if (Ref.mainVessel != null)
+		bool flag2 = Ref.mainVessel != null;
+		if (flag2)
 		{
 			Ref.mainVessel.SetVesselState(Vessel.ToState.ToRealTime);
 		}
-		foreach (Vessel current in Ref.controller.vessels)
+		foreach (Vessel vessel in Ref.controller.vessels)
 		{
-			if (current != Ref.mainVessel && (current.state == Vessel.State.OnRails || current.state == Vessel.State.Stationary))
+			bool flag3 = vessel != Ref.mainVessel && (vessel.state == Vessel.State.OnRails || vessel.state == Vessel.State.Stationary);
+			if (flag3)
 			{
-				current.SetVesselState(Vessel.ToState.ToRealTime);
+				vessel.SetVesselState(Vessel.ToState.ToRealTime);
 			}
 		}
 	}
@@ -951,38 +989,40 @@ public class Controller : MonoBehaviour
 
 	public void RepositionFuelIcons()
 	{
-		for (int i = 0; i < this.fuelIcons.Count; i++)
+		for (int i = 0; i < this.vessels.Count; i++)
 		{
-			if (this.fuelIcons[i].icon != null)
+			for (int j = 0; j < this.vessels[i].partsManager.resourceGrups.Count; j++)
 			{
-				UnityEngine.Object.Destroy(this.fuelIcons[i].icon.gameObject);
+				this.vessels[i].partsManager.resourceGrups[j].fuelIcon = null;
 			}
 		}
-		this.fuelIcons.Clear();
-		if (Ref.mainVessel != null)
+		int k = (!(Ref.mainVessel == null)) ? Ref.mainVessel.partsManager.resourceGrups.Count : 0;
+		while (k > this.fuelIcons.Count)
 		{
-			foreach (EngineModule current in Ref.mainVessel.partsManager.engineModules)
+			this.fuelIcons.Add(this.CreateNewFuelIcon());
+		}
+		for (int l = 0; l < this.fuelIcons.Count; l++)
+		{
+			bool flag = l < k;
+			if (flag)
 			{
-				if (current.displayFuel.boolValue)
-				{
-					current.CheckResourceSource(false);
-					Transform transform = UnityEngine.Object.Instantiate<Transform>(Ref.controller.fuelIconPrefab, Ref.controller.velocityUI.transform.parent);
-					transform.SetAsFirstSibling();
-					current.fuelIcon = new EngineModule.FuelIcon(transform.GetComponent<Image>(), transform.GetChild(1).GetComponent<Image>())
-					{
-						bar = 
-						{
-							fillAmount = current.resourceSource.resourcePercent
-						}
-					};
-					this.fuelIcons.Add(current.fuelIcon);
-				}
+				this.fuelIcons[l].gameObject.SetActive(true);
+				this.fuelIcons[l].GetChild(0).localScale = new Vector3(Ref.mainVessel.partsManager.resourceGrups[l].resourcePercent, this.fuelIcons[l].GetChild(0).localScale.y, 1f);
+				Ref.mainVessel.partsManager.resourceGrups[l].fuelIcon = this.fuelIcons[l];
+			}
+			else
+			{
+				this.fuelIcons[l].gameObject.SetActive(false);
 			}
 		}
-		for (int j = 0; j < this.fuelIcons.Count; j++)
-		{
-			this.fuelIcons[j].icon.rectTransform.position = new Vector3(25f, (float)(50 + j * 60), 0f);
-		}
+	}
+
+	private Transform CreateNewFuelIcon()
+	{
+		Transform transform = UnityEngine.Object.Instantiate<Transform>(this.fuelIconPrefab, this.fuelIconsHolder);
+		transform.localPosition = new Vector3(0f, (float)this.fuelIcons.Count * 0.32f, 0f);
+		transform.SetAsFirstSibling();
+		return transform;
 	}
 
 	private bool GetEnableVelocityOffset(Vessel vessel)
@@ -990,4 +1030,110 @@ public class Controller : MonoBehaviour
 		double num = this.loadedPlanet.radius + Math.Max(this.loadedPlanet.terrainData.maxTerrainHeight + 5000.0, this.loadedPlanet.atmosphereData.atmosphereHeightM * 0.2);
 		return vessel.GetGlobalPosition.sqrMagnitude2d > num * num;
 	}
+
+	public Controller()
+	{
+	}
+
+	[Header(" Controller")]
+	public string startAdress;
+
+	public CelestialBodyData loadedPlanet;
+
+	public List<Vessel> vessels;
+
+	public float camTargetAngle;
+
+	public float camAngularVelocity;
+
+	public float createHeight;
+
+	[Header(" Time")]
+	public double globalTime;
+
+	public int timewarpPhase;
+
+	public int[] warpSpeeds;
+
+	public double startedTimewarpTime;
+
+	[Header(" Rotation Controll")]
+	public float xAxis;
+
+	[Header(" UI Refs")]
+	public Image throttleBar;
+
+	public Transform fuelIconPrefab;
+
+	public Text throttlePercentUI;
+
+	public Text throttleOnUI;
+
+	public Text msgUI;
+
+	public Text warpedTimeCounterUI;
+
+	public TextMesh topRightText;
+
+	[Space]
+	public MoveModule timewarpButtonColorMove;
+
+	public MoveModule throttleColorMove;
+
+	[Space]
+	public Transform bottomLeftHolder;
+
+	[Space]
+	public Transform fuelIconsHolder;
+
+	public List<Transform> fuelIcons;
+
+	[Header(" Prefabs Refs")]
+	public Transform vesselPrefab;
+
+	public bool enableVelocityOffset;
+
+	[Header("Camera")]
+	[BoxGroup]
+	public float cameraDistanceGame;
+
+	[BoxGroup]
+	public LayerMask gameView;
+
+	[BoxGroup]
+	public LayerMask scaledView;
+
+	[BoxGroup]
+	public LayerMask mapView;
+
+	[BoxGroup]
+	public float scaledSpaceThreshold;
+
+	public Transform stars;
+
+	public Transform audioListener;
+
+	public Transform explosionParticle;
+
+	public float updatedPersistantTime;
+
+	public float regularUpdateTime;
+
+	public Vector2 cameraPositionGame;
+
+	public Vector2 cameraOffset;
+
+	public Transform directionArrow;
+
+	public CanvasScaler canvas;
+
+	public Canvas canvass;
+
+	private IEnumerator msgCoroutine;
+
+	public PartDatabase partDatabase;
+
+	public Material flameByHeightMaterial;
+
+	public Vector2 viewPositons;
 }

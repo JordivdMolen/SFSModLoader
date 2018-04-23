@@ -1,36 +1,9 @@
+﻿using System;
 using Sirenix.OdinInspector;
-using System;
 using UnityEngine;
 
 public class Soundtrack : MonoBehaviour
 {
-	[Serializable]
-	public class SoundtrackPiece
-	{
-		public AudioClip soundtracks;
-
-		[Range(0f, 3f)]
-		public float pitch = 1f;
-
-		[Range(0f, 3f)]
-		public float volume = 0.25f;
-
-		public bool enabled = true;
-	}
-
-	[TableList, Space]
-	public Soundtrack.SoundtrackPiece[] soundtracks;
-
-	[Header(" Delay between soundtracks")]
-	public float delay;
-
-	[Space]
-	public AudioSource audioSource;
-
-	public bool playingSoundtrack;
-
-	public int index;
-
 	public void SelectRandomSoundtrack()
 	{
 		int num = this.index;
@@ -48,32 +21,77 @@ public class Soundtrack : MonoBehaviour
 
 	private void Update()
 	{
-		if (Ref.currentScene == Ref.SceneType.Game)
+		bool flag = Ref.currentScene == Ref.SceneType.Game;
+		if (flag)
 		{
 			this.playingSoundtrack = (Ref.mainVessel != null && (Ref.mainVesselHeight > Ref.controller.loadedPlanet.atmosphereData.atmosphereHeightM || Ref.controller.loadedPlanet.bodyName != Ref.controller.startAdress));
 		}
-		if (this.playingSoundtrack)
+		bool flag2 = this.playingSoundtrack;
+		if (flag2)
 		{
-			if (!this.audioSource.isPlaying && !base.IsInvoking("SelectRandomSoundtrack"))
+			bool flag3 = !this.audioSource.isPlaying && !base.IsInvoking("SelectRandomSoundtrack");
+			if (flag3)
 			{
 				base.Invoke("SelectRandomSoundtrack", 1f);
 			}
-			if (this.index != -1 && this.audioSource.volume < this.soundtracks[this.index].volume)
+			bool flag4 = this.index != -1 && this.audioSource.volume < this.soundtracks[this.index].volume;
+			if (flag4)
 			{
 				this.audioSource.volume = Mathf.Min(this.audioSource.volume + Time.deltaTime * 0.1f * this.soundtracks[this.index].volume, this.soundtracks[this.index].volume);
 			}
 		}
-		else if (this.audioSource.isPlaying)
+		else
 		{
-			if (this.audioSource.volume > 0f)
+			bool isPlaying = this.audioSource.isPlaying;
+			if (isPlaying)
 			{
-				this.audioSource.volume -= Time.deltaTime * 0.1f * this.soundtracks[this.index].volume;
-			}
-			else
-			{
-				this.audioSource.Stop();
-				base.CancelInvoke("SelectRandomSoundtrack");
+				bool flag5 = this.audioSource.volume > 0f;
+				if (flag5)
+				{
+					this.audioSource.volume -= Time.deltaTime * 0.1f * this.soundtracks[this.index].volume;
+				}
+				else
+				{
+					this.audioSource.Stop();
+					base.CancelInvoke("SelectRandomSoundtrack");
+				}
 			}
 		}
+	}
+
+	public Soundtrack()
+	{
+	}
+
+	[Space]
+	[TableList]
+	public Soundtrack.SoundtrackPiece[] soundtracks;
+
+	[Header(" Delay between soundtracks")]
+	public float delay;
+
+	[Space]
+	public AudioSource audioSource;
+
+	public bool playingSoundtrack;
+
+	public int index;
+
+	[Serializable]
+	public class SoundtrackPiece
+	{
+		public SoundtrackPiece()
+		{
+		}
+
+		public AudioClip soundtracks;
+
+		[Range(0f, 3f)]
+		public float pitch = 1f;
+
+		[Range(0f, 3f)]
+		public float volume = 0.25f;
+
+		public bool enabled = true;
 	}
 }

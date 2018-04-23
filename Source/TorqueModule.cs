@@ -1,12 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 public class TorqueModule : Module
 {
-	public FloatValueHolder torque;
-
-	public bool showParametersDescription = true;
-
 	public override List<object> SaveVariables
 	{
 		get
@@ -22,10 +18,16 @@ public class TorqueModule : Module
 	{
 		get
 		{
-			return (!this.showParametersDescription) ? new List<string>() : new List<string>
+			List<string> result;
+			if (this.showParametersDescription)
 			{
-				"Torque: " + this.torque.floatValue + " kN"
-			};
+				(result = new List<string>()).Add("Torque: " + this.torque.floatValue + " kN");
+			}
+			else
+			{
+				result = new List<string>();
+			}
+			return result;
 		}
 	}
 
@@ -33,4 +35,12 @@ public class TorqueModule : Module
 	{
 		base.transform.root.GetComponent<Vessel>().partsManager.UpdateTorque();
 	}
+
+	public TorqueModule()
+	{
+	}
+
+	public FloatValueHolder torque;
+
+	public bool showParametersDescription = true;
 }
