@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NewBuildSystem;
 using UnityEngine;
+using SFSML;
 
 public class GameSaving : MonoBehaviour
 {
@@ -234,9 +235,30 @@ public class GameSaving : MonoBehaviour
 			bool flag = !(partByName == null);
 			if (flag)
 			{
-				array[i] = UnityEngine.Object.Instantiate<Transform>(partByName.prefab, Vector3.zero, Quaternion.identity).GetComponent<Part>();
+				array[i] = Instantiate(partByName.prefab, Vector3.zero, Quaternion.identity).GetComponent<Part>();
 				array[i].orientation = vesselToLoad.parts[i].orientation;
-			}
+
+                array[i].partData.tags.Clear();
+                try
+                {
+                    foreach (string text in vesselToLoad.parts[i].tagsString.Split('|'))
+                    {
+                        if (!(text == ""))
+                        {
+                            Type type = Type.GetType(text.Split('#')[0]);
+                            string key = text.Split('#')[1];
+
+                            object obj = JsonUtility.FromJson(text.Split('#')[2], type);
+
+                            array[i].partData.tags.Add(key, obj);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    ModLoader.mainConsole.logError(e);
+                }
+            }
 		}
 		for (int j = 0; j < vesselToLoad.joints.Length; j++)
 		{

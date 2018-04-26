@@ -6,6 +6,7 @@ using SFSML.HookSystem.ReWork.BaseHooks.PartHooks;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
+using System.Text;
 
 [DisallowMultipleComponent]
 public class Part : MonoBehaviour
@@ -379,7 +380,7 @@ public class Part : MonoBehaviour
 				this.fromSurfaceIndex = fromSurfaceIndex;
 				this.toSurfaceIndex = toSurfaceIndex;
 				this.fuelFlow = fuelFlow;
-			}
+            }
 
 			public static int GetToPartIndex(Part.Joint joint, List<Part> parts)
 			{
@@ -439,7 +440,23 @@ public class Part : MonoBehaviour
 				array[i] = new Module.Save(part.modules[i].GetType().ToString(), part.modules[i].SaveVariables);
 			}
 			this.moduleSaves = array;
-		}
+
+
+            StringBuilder sb = new StringBuilder();
+            foreach (string text in part.partData.tags.Keys)
+            {
+                sb.Append(string.Concat(new string[]
+                {
+                    part.partData.tags[text].GetType().AssemblyQualifiedName,
+                    "#",
+                    text,
+                    "#",
+                    JsonUtility.ToJson(part.partData.tags[text]),
+                    "|"
+                }));
+            }
+            this.tagsString = sb.ToString();
+        }
 
 		[Header("Part")]
 		public string partName;
@@ -447,5 +464,7 @@ public class Part : MonoBehaviour
 		public Orientation orientation;
 
 		public Module.Save[] moduleSaves;
-	}
+
+        public string tagsString;
+    }
 }

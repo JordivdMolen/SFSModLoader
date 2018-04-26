@@ -5,6 +5,8 @@ using NewBuildSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
+using SFSML.HookSystem.ReWork.BaseHooks.VesselHooks;
+using SFSML.HookSystem.ReWork;
 
 public class Controller : MonoBehaviour
 {
@@ -488,7 +490,14 @@ public class Controller : MonoBehaviour
 		Ref.inputController.leftArrow.parent.gameObject.SetActive(false);
 		this.fuelIconsHolder.gameObject.SetActive(false);
 		Vessel vessel = (!Ref.mapView) ? Ref.mainVessel : Ref.selectedVessel;
-		Ref.inputController.recoverMenuHolder.transform.GetChild(8).GetChild(1).GetComponent<Text>().text = ((!(vessel == Ref.mainVessel)) ? "Complete Recovery" : "Complete Mission");
+        MyVesselRecovering myVesselRecovering = new MyVesselRecovering(vessel);
+        myVesselRecovering = MyHookSystem.executeHook<MyVesselRecovering>(myVesselRecovering);
+        if (myVesselRecovering.isCanceled())
+        {
+            return;
+        }
+
+        Ref.inputController.recoverMenuHolder.transform.GetChild(8).GetChild(1).GetComponent<Text>().text = ((!(vessel == Ref.mainVessel)) ? "Complete Recovery" : "Complete Mission");
 		List<string> list = (!(vessel != null)) ? new List<string>() : new List<string>(vessel.vesselAchievements);
 		bool flag = list.Contains("Reached 10 km altitude.") && list.Count > 2;
 		if (flag)

@@ -136,6 +136,7 @@
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MySceneChangedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MySceneChangeHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\VesselHooks\MyVesselLandedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\VesselHooks\MyVesselRecovering.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\VesselHooks\MyVesselOnDestroyHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\MyHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\MyHookListener.cs" />
