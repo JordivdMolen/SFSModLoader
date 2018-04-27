@@ -130,6 +130,8 @@
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\PartHooks\MyPartUsedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\PartHooks\MyPartUseHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\PartHooks\MyUpdateResourceHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\SaveHooks\MySaveLoadedHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\SaveHooks\MySaveSavedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyKeyDownHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyKeyUpHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyModLoadedHook.cs" />

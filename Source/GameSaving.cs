@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using NewBuildSystem;
 using UnityEngine;
 using SFSML;
+using SFSML.HookSystem.ReWork;
+using SFSML.HookSystem.ReWork.BaseHooks.SaveHooks;
 
 public class GameSaving : MonoBehaviour
 {
@@ -52,7 +54,15 @@ public class GameSaving : MonoBehaviour
 	public static void LoadGame(GameSaving.GameSave loadedData)
 	{
 		GameSaving.ClearScene();
-		Ref.planetManager.SwitchLocation(Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress), loadedData.vessels[loadedData.mainVesselId].globalPosition, false, true, 0.0);
+        MySaveLoadedHook mySaveLoadedHook = new MySaveLoadedHook(loadedData);
+        mySaveLoadedHook = MyHookSystem.executeHook<MySaveLoadedHook>(mySaveLoadedHook);
+        if (mySaveLoadedHook.isCanceled())
+        {
+            return;
+        }
+
+
+        Ref.planetManager.SwitchLocation(Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress), loadedData.vessels[loadedData.mainVesselId].globalPosition, false, true, 0.0);
 		Ref.velocityOffset = loadedData.velocityOffset;
 		Ref.controller.globalTime = loadedData.globalTime;
 		Ref.controller.timewarpPhase = loadedData.timeWarpPhase;
@@ -344,7 +354,14 @@ public class GameSaving : MonoBehaviour
 
 		public static void AddQuicksave(GameSaving.GameSave newQuicksave)
 		{
-			GameSaving.Quicksaves quicksaves = GameSaving.Quicksaves.LoadQuicksaves();
+            MySaveSavedHook mySaveSavedHook = new MySaveSavedHook(newQuicksave);
+            mySaveSavedHook = MyHookSystem.executeHook<MySaveSavedHook>(mySaveSavedHook);
+            if (mySaveSavedHook.isCanceled())
+            {
+                return;
+            }
+
+            GameSaving.Quicksaves quicksaves = GameSaving.Quicksaves.LoadQuicksaves();
 			quicksaves.quicksaves.Add(newQuicksave);
 			GameSaving.Quicksaves.SaveQuicksaves(quicksaves);
 		}
