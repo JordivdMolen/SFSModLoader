@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using NewBuildSystem;
 using UnityEngine;
 using UnityEngine.UI;
+using SFSML.HookSystem.ReWork.BaseHooks.UtilHooks;
+using SFSML.HookSystem.ReWork;
 
 public class InputController : global::Touch
 {
@@ -153,7 +155,14 @@ public class InputController : global::Touch
 
 	public void StartTouchEmpty(Vector2 posWorld, int fingerId)
 	{
-		Ref.SceneType currentScene = Ref.currentScene;
+        MyTouchStartHook myTouchStartHook = new MyTouchStartHook();
+        myTouchStartHook = MyHookSystem.executeHook<MyTouchStartHook>(myTouchStartHook);
+        if (myTouchStartHook.isCanceled())
+        {
+            return;
+        }
+
+        Ref.SceneType currentScene = Ref.currentScene;
 		bool flag = currentScene > Ref.SceneType.MainMenu;
 		if (flag)
 		{
