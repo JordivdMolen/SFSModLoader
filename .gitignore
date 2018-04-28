@@ -1,8 +1,8 @@
-﻿################################################################################
+################################################################################
 # Ce fichier .gitignore a été automatiquement créé par Microsoft(R) Visual Studio.
 ################################################################################
 
 /Source/bin/Debug
-Source/obj/Debug/Assembly-CSharp.dll
+/Source/bin/Release
 Source/obj/Debug/Assembly-CSharp.dll
 Source/obj/Debug/Assembly-CSharp.pdb
