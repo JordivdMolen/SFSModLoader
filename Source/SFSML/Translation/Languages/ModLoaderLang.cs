@@ -8,11 +8,11 @@ namespace SFSML.Translation.Languages
 		{
 		}
 
-		public string Version = "1.0.3.B1";
+		public string Version = "1.3.1";
 
-		public string LoaderTag = "Hydria [1.0.3.R1]";
+		public string LoaderTag = "Hydria [1.3.1]";
 
-		public string LoaderVersion = "1.0.3.R1";
+		public string LoaderVersion = "1.3.1";
 
 		public string EntryMessage = "Loading Hydria Modding Environment Version: %LoaderVersion%";
 
