@@ -134,6 +134,7 @@
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\SaveHooks\MySaveSavedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyKeyDownHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyKeyUpHook.cs" />
+    <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyTouchStartHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MyModLoadedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MySceneChangedHook.cs" />
     <Compile Include="SFSML\HookSystem\ReWork\BaseHooks\UtilHooks\MySceneChangeHook.cs" />

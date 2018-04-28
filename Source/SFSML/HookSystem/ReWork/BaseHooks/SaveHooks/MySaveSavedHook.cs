@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SFSML.HookSystem.ReWork.BaseHooks.SaveHooks
 {
-    class MySaveSavedHook : MyHook
+    public class MySaveSavedHook : MyHook
     {
         public MySaveSavedHook(GameSaving.GameSave save)
         {

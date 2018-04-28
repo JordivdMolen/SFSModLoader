@@ -508,7 +508,7 @@ namespace NewBuildSystem
 
 		public void LoadSave(Build.BuildSave buildSaveToLoad)
 		{
-            MyVesselLoadedHook myVesselLoadedHook = new MyVesselLoadedHook(buildSaveToLoad);
+            MyVesselLoadedHook myVesselLoadedHook = new MyVesselLoadedHook(Build.BuildSave.PlacedPartSave.FromSave(buildSaveToLoad.parts, this.partDatabase));
             myVesselLoadedHook = MyHookSystem.executeHook<MyVesselLoadedHook>(myVesselLoadedHook);
             if (myVesselLoadedHook.isCanceled())
             {
@@ -516,7 +516,7 @@ namespace NewBuildSystem
             }
             this.buildGrid.DeleteAllIcons();
 			Camera.main.transform.position = buildSaveToLoad.cameraPosition;
-			this.buildGrid.parts = Build.BuildSave.PlacedPartSave.FromSave(buildSaveToLoad.parts, this.partDatabase);
+            this.buildGrid.parts = myVesselLoadedHook.parts;
 			this.buildGrid.LoadAllIcons();
 			this.MoveCamera(Vector3.zero);
 		}
@@ -869,7 +869,7 @@ namespace NewBuildSystem
 						{
 
                             //Tags parsing from text back to a Dictionary
-                            partByName.tags.Clear();
+                            partByName.tags = new Dictionary<string, object>();
                             try
                             {
                                 foreach (string text in parts[i].tagsString.Split(new char[]

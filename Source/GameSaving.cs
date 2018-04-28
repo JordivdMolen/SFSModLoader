@@ -248,19 +248,23 @@ public class GameSaving : MonoBehaviour
 				array[i] = Instantiate(partByName.prefab, Vector3.zero, Quaternion.identity).GetComponent<Part>();
 				array[i].orientation = vesselToLoad.parts[i].orientation;
 
-                array[i].partData.tags.Clear();
+                array[i].partData.tags = new Dictionary<string, object>();
+
                 try
                 {
-                    foreach (string text in vesselToLoad.parts[i].tagsString.Split('|'))
+                    if (vesselToLoad.parts[i].tagsString != null)
                     {
-                        if (!(text == ""))
+                        foreach (string text in vesselToLoad.parts[i].tagsString.Split('|'))
                         {
-                            Type type = Type.GetType(text.Split('#')[0]);
-                            string key = text.Split('#')[1];
+                            if (!(text == ""))
+                            {
+                                Type type = Type.GetType(text.Split('#')[0]);
+                                string key = text.Split('#')[1];
 
-                            object obj = JsonUtility.FromJson(text.Split('#')[2], type);
+                                object obj = JsonUtility.FromJson(text.Split('#')[2], type);
 
-                            array[i].partData.tags.Add(key, obj);
+                                array[i].partData.tags.Add(key, obj);
+                            }
                         }
                     }
                 }

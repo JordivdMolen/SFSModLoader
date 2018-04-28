@@ -86,7 +86,6 @@ namespace NewBuildSystem
 
 		public float breakVelocity = 5f;
 
-
         //Custom field for custom values saving
         public Dictionary<string, object> tags = new Dictionary<string, object>();
 

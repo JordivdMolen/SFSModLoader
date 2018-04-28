@@ -1,15 +1,16 @@
 ﻿using System;
 using NewBuildSystem;
+using System.Collections.Generic;
 
 namespace SFSML.HookSystem.ReWork.BaseHooks.BuildHooks
 {
 	public class MyVesselLoadedHook : MyHook
 	{
-		public MyVesselLoadedHook(Build.BuildSave save)
+		public MyVesselLoadedHook(List<PlacedPart> parts)
 		{
-			this.save = save;
+            this.parts = parts;
 		}
 
-		public Build.BuildSave save;
+		public List<PlacedPart> parts;
 	}
 }

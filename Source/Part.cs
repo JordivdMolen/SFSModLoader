@@ -28,7 +28,9 @@ public class Part : MonoBehaviour
 
 	public virtual void UsePart()
 	{
-		MyPartUsedHook myPartUsedHook = MyHookSystem.executeHook<MyPartUsedHook>(new MyPartUsedHook(this));
+        MyPartUsedHook myPartUsedHook = new MyPartUsedHook(this);
+        myPartUsedHook = MyHookSystem.executeHook<MyPartUsedHook>(myPartUsedHook);
+
 		bool flag = myPartUsedHook.isCanceled();
 		if (!flag)
 		{
