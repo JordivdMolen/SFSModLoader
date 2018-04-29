@@ -173,7 +173,7 @@ namespace NewBuildSystem
 				if (flag2)
 				{
 					PlacedPart part = this.holdingParts[fingerId].part;
-					Vector3 newPos = Vector3.Lerp(v, autoCorrect, 1f - this.roundStrength);
+					Vector3 newPos = Vector3.Lerp(partPos, autoCorrect, 1f - this.roundStrength);
 					MyPartDragHook myPartDragHook = new MyPartDragHook(part, newPos);
 					bool flag3 = myPartDragHook.isCanceled();
 					if (!flag3)

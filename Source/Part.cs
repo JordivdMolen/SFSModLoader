@@ -28,10 +28,10 @@ public class Part : MonoBehaviour
 
 	public virtual void UsePart()
 	{
-        MyPartUsedHook myPartUsedHook = new MyPartUsedHook(this);
-        myPartUsedHook = MyHookSystem.executeHook<MyPartUsedHook>(myPartUsedHook);
+        MyPartUseHook myPartUseHook = new MyPartUseHook(this);
+        myPartUseHook = MyHookSystem.executeHook<MyPartUseHook>(myPartUseHook);
 
-		bool flag = myPartUsedHook.isCanceled();
+		bool flag = myPartUseHook.isCanceled();
 		if (!flag)
 		{
 			bool flag2 = this.useEvent;
