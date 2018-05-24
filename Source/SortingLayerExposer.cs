@@ -9,10 +9,6 @@ public class SortingLayerExposer : MonoBehaviour
 		base.gameObject.GetComponent<MeshRenderer>().sortingOrder = this.SortingOrder;
 	}
 
-	public SortingLayerExposer()
-	{
-	}
-
 	public string SortingLayerName = "Default";
 
 	public int SortingOrder;

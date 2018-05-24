@@ -4,7 +4,4 @@ using UIEventDelegate;
 [Serializable]
 public class ReorderableEventList : ReorderableList<EventDelegate>
 {
-	public ReorderableEventList()
-	{
-	}
 }

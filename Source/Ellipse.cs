@@ -27,10 +27,6 @@ public class Ellipse : MonoBehaviour
 		return array;
 	}
 
-	public Ellipse()
-	{
-	}
-
 	public float x = 5f;
 
 	public float y = 3f;

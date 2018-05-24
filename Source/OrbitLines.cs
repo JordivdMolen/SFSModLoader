@@ -6,15 +6,12 @@ public static class OrbitLines
 {
 	public static void CalculateOrbitLines(OrbitLines.OrbitLinesPack orbitLines, List<Orbit> orbits)
 	{
-		bool flag = orbits.Count == 0;
-		if (flag)
+		if (orbits.Count == 0)
 		{
 			orbitLines.HideAll();
+			return;
 		}
-		else
-		{
-			OrbitLines.DrawKeplerOrbits(orbitLines, orbits);
-		}
+		OrbitLines.DrawKeplerOrbits(orbitLines, orbits);
 	}
 
 	public static void DrawKeplerOrbits(OrbitLines.OrbitLinesPack orbitLines, List<Orbit> orbits)
@@ -25,18 +22,14 @@ public static class OrbitLines
 		int num = 0;
 		while (num < orbits.Count && num < 3)
 		{
-			bool flag = orbits[num].eccentricity > 1.0 || orbits[num].eccentricity <= 0.9999999;
-			if (flag)
+			if (orbits[num].eccentricity > 1.0 || orbits[num].eccentricity <= 0.9999999)
 			{
 				Orbit.Type orbitType = orbits[num].orbitType;
-				bool flag2 = orbitType > Orbit.Type.Eternal;
-				if (flag2)
+				if (orbitType != Orbit.Type.Eternal)
 				{
-					bool flag3 = orbitType != Orbit.Type.Escape;
-					if (flag3)
+					if (orbitType != Orbit.Type.Escape)
 					{
-						bool flag4 = orbitType == Orbit.Type.Encounter;
-						if (flag4)
+						if (orbitType == Orbit.Type.Encounter)
 						{
 							orbitLines.procedual[num].material = Ref.map.orbitLineMaterials[orbits[num].planet.type];
 							double newTime = Math.Max(Ref.controller.globalTime, orbits[num].timeIn);
@@ -62,12 +55,11 @@ public static class OrbitLines
 					orbitLines.elliptical.transform.parent.localEulerAngles = new Vector3(0f, 0f, (float)orbits[num].argumentOfPeriapsis * 57.29578f);
 					double num2 = Math.Sqrt(1.0 - orbits[num].eccentricity * orbits[num].eccentricity);
 					double num3 = (num2 <= 0.0) ? 0.0 : (orbits[num].semiMajorAxis * num2);
-					orbitLines.elliptical.transform.parent.localScale = new Vector3((float)(orbits[num].semiMajorAxis / 10000.0), (float)(num3 / 10000.0 * -(double)Math.Sign(orbits[num].meanMotion)), 1f);
-					bool flag5 = num > 0 && orbits[num - 1].orbitType == Orbit.Type.Escape;
-					if (flag5)
+					orbitLines.elliptical.transform.parent.localScale = new Vector3((float)(orbits[num].semiMajorAxis / 10000.0), (float)(num3 / 10000.0 * (double)(-(double)Math.Sign(orbits[num].meanMotion))), 1f);
+					if (num > 0 && orbits[num - 1].orbitType == Orbit.Type.Escape)
 					{
 						orbitLines.elliptical.startColor = new Color(1f, 1f, 1f, 0.05f);
-						orbitLines.elliptical.transform.localEulerAngles = new Vector3(0f, 0f, (float)orbits[num].GetEccentricAnomalyOut(orbits[num - 1].orbitEndTime) * 57.29578f * -(float)Math.Sign(orbits[num].meanMotion));
+						orbitLines.elliptical.transform.localEulerAngles = new Vector3(0f, 0f, (float)orbits[num].GetEccentricAnomalyOut(orbits[num - 1].orbitEndTime) * 57.29578f * (float)(-(float)Math.Sign(orbits[num].meanMotion)));
 					}
 					Vector3 localPosition = new Vector3(Mathf.Cos((float)orbits[num].argumentOfPeriapsis), Mathf.Sin((float)orbits[num].argumentOfPeriapsis), 0f) * (float)((orbits[num].periapsis - orbits[num].apoapsis) / 20000.0);
 					OrbitLines.SetParentAndPosition(orbitLines.elliptical.transform.parent, Ref.map.mapRefs[orbits[num].planet].holder, localPosition);
@@ -81,8 +73,7 @@ public static class OrbitLines
 
 	private static void SetParentAndPosition(Transform orbitLineParent, Transform parent, Vector3 localPosition)
 	{
-		bool flag = orbitLineParent.parent != parent;
-		if (flag)
+		if (orbitLineParent.parent != parent)
 		{
 			orbitLineParent.parent = parent;
 		}
@@ -106,25 +97,15 @@ public static class OrbitLines
 
 		public CelestialBodyData GetFollowingBody()
 		{
-			bool flag = this.targetType == OrbitLines.Target.Type.CelestialBody;
-			CelestialBodyData result;
-			if (flag)
+			if (this.targetType == OrbitLines.Target.Type.CelestialBody)
 			{
-				result = this.targetPlanet;
+				return this.targetPlanet;
 			}
-			else
+			if (this.targetType == OrbitLines.Target.Type.Vessel)
 			{
-				bool flag2 = this.targetType == OrbitLines.Target.Type.Vessel;
-				if (flag2)
-				{
-					result = this.targetVessel.GetVesselPlanet;
-				}
-				else
-				{
-					result = null;
-				}
+				return this.targetVessel.GetVesselPlanet;
 			}
-			return result;
+			return null;
 		}
 
 		public OrbitLines.Target.Type targetType;
@@ -163,7 +144,7 @@ public static class OrbitLines
 		private static LineRenderer CreateVesselOrbitLine(string name, Transform vesselOrbitLinePrefab)
 		{
 			LineRenderer component = UnityEngine.Object.Instantiate<Transform>(vesselOrbitLinePrefab, Vector3.zero, Quaternion.identity, Ref.map.transform).GetChild(0).GetComponent<LineRenderer>();
-			component.widthMultiplier = 0.003f * -(float)Ref.map.mapPosition.z;
+			component.widthMultiplier = 0.003f * (float)(-(float)Ref.map.mapPosition.z);
 			component.sortingOrder = 2;
 			component.sortingLayerName = "Map";
 			component.transform.parent.gameObject.SetActive(false);
@@ -184,37 +165,33 @@ public static class OrbitLines
 
 		public void HideAll()
 		{
-			bool flag = this.hidden;
-			if (!flag)
+			if (this.hidden)
 			{
-				this.hidden = true;
-				bool activeSelf = this.elliptical.transform.parent.gameObject.activeSelf;
-				if (activeSelf)
+				return;
+			}
+			this.hidden = true;
+			if (this.elliptical.transform.parent.gameObject.activeSelf)
+			{
+				this.elliptical.transform.parent.gameObject.SetActive(false);
+			}
+			for (int i = 0; i < this.procedual.Length; i++)
+			{
+				if (this.procedual[i].transform.parent.gameObject.activeSelf)
 				{
-					this.elliptical.transform.parent.gameObject.SetActive(false);
-				}
-				for (int i = 0; i < this.procedual.Length; i++)
-				{
-					bool activeSelf2 = this.procedual[i].transform.parent.gameObject.activeSelf;
-					if (activeSelf2)
-					{
-						this.procedual[i].transform.parent.gameObject.SetActive(false);
-					}
+					this.procedual[i].transform.parent.gameObject.SetActive(false);
 				}
 			}
 		}
 
 		public void SetActive(bool ellipticalActive, bool[] procedualActive)
 		{
-			bool flag = this.elliptical.transform.parent.gameObject.activeSelf != ellipticalActive;
-			if (flag)
+			if (this.elliptical.transform.parent.gameObject.activeSelf != ellipticalActive)
 			{
 				this.elliptical.transform.parent.gameObject.SetActive(ellipticalActive);
 			}
 			for (int i = 0; i < this.procedual.Length; i++)
 			{
-				bool flag2 = this.procedual[i].transform.parent.gameObject.activeSelf != procedualActive[i];
-				if (flag2)
+				if (this.procedual[i].transform.parent.gameObject.activeSelf != procedualActive[i])
 				{
 					this.procedual[i].transform.parent.gameObject.SetActive(procedualActive[i]);
 				}

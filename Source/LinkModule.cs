@@ -19,8 +19,7 @@ public class LinkModule : Module
 
 	private void OnValidate()
 	{
-		bool flag = this.modifiers.Length != this.types.Length;
-		if (flag)
+		if (this.modifiers.Length != this.types.Length)
 		{
 			LinkModule.Type[] array = new LinkModule.Type[this.modifiers.Length];
 			for (int i = 0; i < Mathf.Min(this.modifiers.Length, this.types.Length); i++)
@@ -31,22 +30,19 @@ public class LinkModule : Module
 		}
 		for (int j = 0; j < this.modifiers.Length; j++)
 		{
-			bool flag2 = this.modifiers[j].valuesHolder != null;
-			if (flag2)
+			if (this.modifiers[j].valuesHolder != null)
 			{
-				bool flag3 = false;
+				bool flag = false;
 				int num = 0;
-				while (num < this.modifiers[j].valuesHolder.values[this.modifiers[j].index].methodsHolder.Length && !flag3)
+				while (num < this.modifiers[j].valuesHolder.values[this.modifiers[j].index].methodsHolder.Length && !flag)
 				{
-					bool flag4 = this.modifiers[j].valuesHolder.values[this.modifiers[j].index].methodsHolder[num].component == this && this.modifiers[j].valuesHolder.values[this.modifiers[j].index].methodsHolder[num].methodName == "Calculate";
-					if (flag4)
+					if (this.modifiers[j].valuesHolder.values[this.modifiers[j].index].methodsHolder[num].component == this && this.modifiers[j].valuesHolder.values[this.modifiers[j].index].methodsHolder[num].methodName == "Calculate")
 					{
-						flag3 = true;
+						flag = true;
 					}
 					num++;
 				}
-				bool flag5 = !flag3;
-				if (flag5)
+				if (!flag)
 				{
 					List<ValuesModule.Holder.MethodRefHolder> list = new List<ValuesModule.Holder.MethodRefHolder>(this.modifiers[j].valuesHolder.values[this.modifiers[j].index].methodsHolder);
 					list.Add(new ValuesModule.Holder.MethodRefHolder(this, "Calculate"));
@@ -61,8 +57,7 @@ public class LinkModule : Module
 		float num = this.In;
 		for (int i = 0; i < this.modifiers.Length; i++)
 		{
-			bool flag = this.types[i] == LinkModule.Type.Multiply;
-			if (flag)
+			if (this.types[i] == LinkModule.Type.Multiply)
 			{
 				num *= this.modifiers[i].floatValue;
 			}
@@ -72,10 +67,6 @@ public class LinkModule : Module
 			}
 		}
 		this.Out.floatValue = num;
-	}
-
-	public LinkModule()
-	{
 	}
 
 	[BoxGroup("A", false, false, 0)]

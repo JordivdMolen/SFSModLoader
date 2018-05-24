@@ -2,7 +2,4 @@
 
 public class SimpleReorderableList
 {
-	public SimpleReorderableList()
-	{
-	}
 }

@@ -9,18 +9,13 @@ public class PartDatabase : MonoBehaviour
 	{
 		for (int i = 0; i < this.parts.Count; i++)
 		{
-			bool flag = this.parts[i].name == partName;
-			if (flag)
+			if (this.parts[i].name == partName)
 			{
 				return this.parts[i];
 			}
 		}
 		MonoBehaviour.print("Could not find: " + partName);
 		return null;
-	}
-
-	public PartDatabase()
-	{
 	}
 
 	public List<PartData> parts;

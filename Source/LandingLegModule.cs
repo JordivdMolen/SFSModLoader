@@ -4,19 +4,14 @@ public class LandingLegModule : Module
 {
 	public override void OnPartUsed()
 	{
-		bool timeWarping = Ref.timeWarping;
-		if (timeWarping)
+		if (Ref.timeWarping)
 		{
-			Ref.controller.ShowMsg((this.moveModule.targetTime.floatValue != this.closed) ? this.onTimeWarpWarningClose : this.onTimeWarpWarningOpen);
+			MsgController.ShowMsg((this.moveModule.targetTime.floatValue != this.closed) ? this.onTimeWarpWarningClose : this.onTimeWarpWarningOpen);
 		}
 		else
 		{
 			this.moveModule.SetTargetTime((this.moveModule.targetTime.floatValue != this.closed) ? this.closed : this.open);
 		}
-	}
-
-	public LandingLegModule()
-	{
 	}
 
 	public MoveModule moveModule;

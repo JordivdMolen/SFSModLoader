@@ -19,10 +19,6 @@ public class GameEventListener : MonoBehaviour
 		this.Response.Invoke();
 	}
 
-	public GameEventListener()
-	{
-	}
-
 	[Tooltip("Event to register with.")]
 	public GameEvent Event;
 

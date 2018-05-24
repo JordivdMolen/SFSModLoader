@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Blur : MonoBehaviour
 {
-	[Button("Generate Shade Texture", 0)]
+	[Button("Generate Shade Texture", ButtonSizes.Small)]
 	public void Generate()
 	{
 		Texture2D texture2D = new Texture2D(this.shade.width, this.shade.height, TextureFormat.Alpha8, false);
@@ -14,8 +14,7 @@ public class Blur : MonoBehaviour
 		{
 			for (int j = 0; j < this.shade.height; j++)
 			{
-				bool flag = this.blur.GetPixel(i, j).a > 0f;
-				if (flag)
+				if (this.blur.GetPixel(i, j).a > 0f)
 				{
 					int num = (int)(this.blur.GetPixel(i, j).a * 12f);
 					float num2 = 0f;
@@ -36,7 +35,7 @@ public class Blur : MonoBehaviour
 		File.WriteAllBytes(Application.dataPath + "/Textures/Combined.png", texture2D.EncodeToPNG());
 	}
 
-	[Button("Generate Shade Texture", 0)]
+	[Button("Generate Shade Texture", ButtonSizes.Small)]
 	public void GenerateFlame()
 	{
 		Texture2D texture2D = new Texture2D(this.flameIn.width, this.flameIn.height, TextureFormat.RGBA32, false);
@@ -45,8 +44,7 @@ public class Blur : MonoBehaviour
 		{
 			for (int j = 0; j < texture2D.height; j++)
 			{
-				bool flag = this.flameIn.GetPixel(i, j).a == 0f;
-				if (flag)
+				if (this.flameIn.GetPixel(i, j).a == 0f)
 				{
 					texture2D.SetPixel(i, j, Color.clear);
 				}
@@ -65,10 +63,6 @@ public class Blur : MonoBehaviour
 		}
 		texture2D.Apply();
 		File.WriteAllBytes(Application.dataPath + "/Textures/" + this.flameOut.name + ".png", texture2D.EncodeToPNG());
-	}
-
-	public Blur()
-	{
 	}
 
 	public Texture2D shade;

@@ -6,6 +6,11 @@ using UnityEngine;
 
 public class FairingModule : Module
 {
+	public override bool IsSorted()
+	{
+		return true;
+	}
+
 	private void Start()
 	{
 		UnityEngine.Object.Destroy(this.back);
@@ -28,12 +33,10 @@ public class FairingModule : Module
 			for (int i = 0; i < list2[0].joints.Count; i++)
 			{
 				Part part = (!(list2[0].joints[i].fromPart == list2[0])) ? list2[0].joints[i].fromPart : list2[0].joints[i].toPart;
-				bool flag = part.connectionCheckId != Ref.connectionCheckId;
-				if (flag)
+				if (part.connectionCheckId != Ref.connectionCheckId)
 				{
 					FairingModule component = part.GetComponent<FairingModule>();
-					bool flag2 = !(component == null);
-					if (flag2)
+					if (!(component == null))
 					{
 						part.connectionCheckId = Ref.connectionCheckId;
 						list2.Add(part);
@@ -48,8 +51,7 @@ public class FairingModule : Module
 			for (int k = 0; k < list[j].part.joints.Count; k++)
 			{
 				Part part2 = (!(list[j].part.joints[k].fromPart != list[j].part.joints[k].fromPart)) ? list[j].part.joints[k].fromPart : list[j].part.joints[k].toPart;
-				bool flag3 = !part2.HasFairingModule();
-				if (flag3)
+				if (!part2.HasFairingModule())
 				{
 					Part.DestroyJoint(list[j].part.joints[k], false);
 					k--;
@@ -76,8 +78,7 @@ public class FairingModule : Module
 
 	public void SplitFairing(ref List<Part> partsToPush)
 	{
-		bool flag = this.fairingHalfPrefab != null;
-		if (flag)
+		if (this.fairingHalfPrefab != null)
 		{
 			Part part = CreateRocket.CreatePart(this.fairingHalfPrefab, this.part.orientation, this.part.transform.parent, this.part.transform.localPosition);
 			Part part2 = CreateRocket.CreatePart(this.fairingHalfPrefab, new Orientation(-this.part.orientation.x, this.part.orientation.y, this.part.orientation.z), this.part.transform.parent, this.part.transform.localPosition);
@@ -97,10 +98,6 @@ public class FairingModule : Module
 			partsToPush.Add(part2);
 		}
 		this.part.DestroyPart(false, true);
-	}
-
-	public FairingModule()
-	{
 	}
 
 	[BoxGroup("Build", false, false, 0)]

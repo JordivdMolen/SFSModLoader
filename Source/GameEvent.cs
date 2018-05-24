@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class GameEvent : ScriptableObject
 {
-	[Button("Raise", 0)]
+	[Button("Raise", ButtonSizes.Small)]
 	public void Raise()
 	{
 		for (int i = this.eventListeners.Count - 1; i >= 0; i--)
@@ -16,8 +16,7 @@ public class GameEvent : ScriptableObject
 
 	public void RegisterListener(GameEventListener listener)
 	{
-		bool flag = !this.eventListeners.Contains(listener);
-		if (flag)
+		if (!this.eventListeners.Contains(listener))
 		{
 			this.eventListeners.Add(listener);
 		}
@@ -25,15 +24,10 @@ public class GameEvent : ScriptableObject
 
 	public void UnregisterListener(GameEventListener listener)
 	{
-		bool flag = this.eventListeners.Contains(listener);
-		if (flag)
+		if (this.eventListeners.Contains(listener))
 		{
 			this.eventListeners.Remove(listener);
 		}
-	}
-
-	public GameEvent()
-	{
 	}
 
 	[ReadOnly]

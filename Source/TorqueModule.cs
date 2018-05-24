@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 
 public class TorqueModule : Module
 {
+	public override bool IsSorted()
+	{
+		return true;
+	}
+
 	public override List<object> SaveVariables
 	{
 		get
@@ -18,28 +24,19 @@ public class TorqueModule : Module
 	{
 		get
 		{
-			List<string> result;
-			if (this.showParametersDescription)
+			return (!this.showParametersDescription) ? new List<string>() : new List<string>
 			{
-				(result = new List<string>()).Add("Torque: " + this.torque.floatValue + " kN");
-			}
-			else
-			{
-				result = new List<string>();
-			}
-			return result;
+				"Torque: " + this.torque.floatValue + " kN"
+			};
 		}
 	}
 
-	public void UpdateTorque(float newTorque)
+	public void Torque(float newTorque)
 	{
 		base.transform.root.GetComponent<Vessel>().partsManager.UpdateTorque();
 	}
 
-	public TorqueModule()
-	{
-	}
-
+	[InlineProperty]
 	public FloatValueHolder torque;
 
 	public bool showParametersDescription = true;

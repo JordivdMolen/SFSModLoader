@@ -71,17 +71,11 @@ public struct Double3
 		get
 		{
 			double magnitude2d = this.magnitude2d;
-			bool flag = magnitude2d > 9.99999974737875E-06;
-			Double3 result;
-			if (flag)
+			if (magnitude2d > 9.99999974737875E-06)
 			{
-				result = this / magnitude2d;
+				return this / magnitude2d;
 			}
-			else
-			{
-				result = Double3.zero;
-			}
-			return result;
+			return Double3.zero;
 		}
 	}
 
@@ -167,25 +161,15 @@ public struct Double3
 		double num2 = p2.y;
 		double num3 = num * num + num2 * num2;
 		double num4 = (p3.x * num + p3.y * num2) / num3;
-		bool flag = num4 < 0.0;
-		double result;
-		if (flag)
+		if (num4 < 0.0)
 		{
-			result = 0.0;
+			return 0.0;
 		}
-		else
+		if (num4 > 1.0)
 		{
-			bool flag2 = num4 > 1.0;
-			if (flag2)
-			{
-				result = 1.0;
-			}
-			else
-			{
-				result = num4;
-			}
+			return 1.0;
 		}
-		return result;
+		return num4;
 	}
 
 	[HorizontalGroup(0f, 0, 0, 0)]

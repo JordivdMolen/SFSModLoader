@@ -21,46 +21,33 @@ public class Soundtrack : MonoBehaviour
 
 	private void Update()
 	{
-		bool flag = Ref.currentScene == Ref.SceneType.Game;
-		if (flag)
+		if (Ref.currentScene == Ref.SceneType.Game)
 		{
 			this.playingSoundtrack = (Ref.mainVessel != null && (Ref.mainVesselHeight > Ref.controller.loadedPlanet.atmosphereData.atmosphereHeightM || Ref.controller.loadedPlanet.bodyName != Ref.controller.startAdress));
 		}
-		bool flag2 = this.playingSoundtrack;
-		if (flag2)
+		if (this.playingSoundtrack)
 		{
-			bool flag3 = !this.audioSource.isPlaying && !base.IsInvoking("SelectRandomSoundtrack");
-			if (flag3)
+			if (!this.audioSource.isPlaying && !base.IsInvoking("SelectRandomSoundtrack"))
 			{
 				base.Invoke("SelectRandomSoundtrack", 1f);
 			}
-			bool flag4 = this.index != -1 && this.audioSource.volume < this.soundtracks[this.index].volume;
-			if (flag4)
+			if (this.index != -1 && this.audioSource.volume < this.soundtracks[this.index].volume)
 			{
 				this.audioSource.volume = Mathf.Min(this.audioSource.volume + Time.deltaTime * 0.1f * this.soundtracks[this.index].volume, this.soundtracks[this.index].volume);
 			}
 		}
-		else
+		else if (this.audioSource.isPlaying)
 		{
-			bool isPlaying = this.audioSource.isPlaying;
-			if (isPlaying)
+			if (this.audioSource.volume > 0f)
 			{
-				bool flag5 = this.audioSource.volume > 0f;
-				if (flag5)
-				{
-					this.audioSource.volume -= Time.deltaTime * 0.1f * this.soundtracks[this.index].volume;
-				}
-				else
-				{
-					this.audioSource.Stop();
-					base.CancelInvoke("SelectRandomSoundtrack");
-				}
+				this.audioSource.volume -= Time.deltaTime * 0.1f * this.soundtracks[this.index].volume;
+			}
+			else
+			{
+				this.audioSource.Stop();
+				base.CancelInvoke("SelectRandomSoundtrack");
 			}
 		}
-	}
-
-	public Soundtrack()
-	{
 	}
 
 	[Space]
@@ -80,10 +67,6 @@ public class Soundtrack : MonoBehaviour
 	[Serializable]
 	public class SoundtrackPiece
 	{
-		public SoundtrackPiece()
-		{
-		}
-
 		public AudioClip soundtracks;
 
 		[Range(0f, 3f)]

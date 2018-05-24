@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 public class CustomEvent : MonoBehaviour
 {
-	[Button(0)]
+	[Button(ButtonSizes.Small)]
 	public void InvokeEvenets()
 	{
 		this.customEvent.Invoke();
@@ -14,10 +14,6 @@ public class CustomEvent : MonoBehaviour
 	public void InvokeEventsDelayed(float delay)
 	{
 		base.Invoke("InvokeEvenets", delay);
-	}
-
-	public CustomEvent()
-	{
 	}
 
 	[HideLabel]

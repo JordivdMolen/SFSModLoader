@@ -10,8 +10,7 @@ public class PlanetManager : MonoBehaviour
 		CelestialBodyData loadedPlanet = Ref.controller.loadedPlanet;
 		foreach (Vessel vessel in Ref.controller.vessels)
 		{
-			bool flag = loadedPlanet != newPlanet || (newFocusPosition - vessel.GetGlobalPosition).sqrMagnitude2d > unloadDistance * unloadDistance;
-			if (flag)
+			if (loadedPlanet != newPlanet || (newFocusPosition - vessel.GetGlobalPosition).sqrMagnitude2d > unloadDistance * unloadDistance)
 			{
 				vessel.SetVesselState(Vessel.ToState.ToUnloaded);
 			}
@@ -39,8 +38,7 @@ public class PlanetManager : MonoBehaviour
 	{
 		for (int i = 0; i < this.lowRezPlanets.planets.Count; i++)
 		{
-			bool flag = this.lowRezPlanets.planets[i].planet != Ref.controller.loadedPlanet && this.lowRezPlanets.planets[i].planet.atmosphereData.hasAtmosphere;
-			if (flag)
+			if (this.lowRezPlanets.planets[i].planet != Ref.controller.loadedPlanet && this.lowRezPlanets.planets[i].planet.atmosphereData.hasAtmosphere)
 			{
 				this.lowRezPlanets.planets[i].meshHolder.GetComponent<MeshRenderer>().sharedMaterial.SetFloat(Shader.PropertyToID("_FadeStrength"), this.lowRezPlanets.planets[i].planet.atmosphereData.maxAtmosphereFade);
 			}
@@ -49,8 +47,7 @@ public class PlanetManager : MonoBehaviour
 
 	private void LoadBaseChuncks(CelestialBodyData planet)
 	{
-		bool flag = planet.type > CelestialBodyData.Type.Star;
-		if (flag)
+		if (planet.type != CelestialBodyData.Type.Star)
 		{
 			for (int i = 0; i < planet.terrainData.heightMaps[0].heightMap.HeightDataArray.Length / planet.terrainData.baseChunckSize; i++)
 			{
@@ -69,8 +66,7 @@ public class PlanetManager : MonoBehaviour
 		}
 		foreach (PlanetManager.Chunck chunck in this.colliderChuncks)
 		{
-			bool flag = chunck.chunckTransform != null;
-			if (flag)
+			if (chunck.chunckTransform != null)
 			{
 				UnityEngine.Object.DestroyImmediate(chunck.chunckTransform.gameObject);
 			}
@@ -83,8 +79,7 @@ public class PlanetManager : MonoBehaviour
 	{
 		this.atmosphereRenderer.gameObject.SetActive(newPlanet.atmosphereData.hasAtmosphere);
 		this.atmosphereRenderer.transform.localScale = Vector3.one * ((!newPlanet.atmosphereData.hasAtmosphere) ? 1f : ((float)(newPlanet.atmosphereData.atmosphereHeightM * newPlanet.atmosphereData.gradientHightMultiplier + newPlanet.radius)));
-		bool hasAtmosphere = newPlanet.atmosphereData.hasAtmosphere;
-		if (hasAtmosphere)
+		if (newPlanet.atmosphereData.hasAtmosphere)
 		{
 			Mesh mesh = this.atmosphereRenderer.GetComponent<MeshFilter>().mesh;
 			Vector2[] uv = mesh.uv;
@@ -103,15 +98,13 @@ public class PlanetManager : MonoBehaviour
 
 	private void ShowSwitchedPlanetMsg(CelestialBodyData newPlanet, CelestialBodyData oldPlanet)
 	{
-		bool flag = oldPlanet.parentBody == newPlanet && oldPlanet != null;
-		if (flag)
+		if (oldPlanet.parentBody == newPlanet && oldPlanet != null)
 		{
-			Ref.controller.ShowMsg("Left " + oldPlanet.bodyName + " sphere of influence");
+			MsgController.ShowMsg("Left " + oldPlanet.bodyName + " sphere of influence");
 		}
-		bool flag2 = newPlanet.parentBody == oldPlanet;
-		if (flag2)
+		if (newPlanet.parentBody == oldPlanet)
 		{
-			Ref.controller.ShowMsg("Entered " + newPlanet.bodyName + " sphere of influence");
+			MsgController.ShowMsg("Entered " + newPlanet.bodyName + " sphere of influence");
 		}
 	}
 
@@ -135,8 +128,7 @@ public class PlanetManager : MonoBehaviour
 	private void Update()
 	{
 		this.UpdateChuncksLoading(Ref.controller.loadedPlanet.terrainData.detailLevels);
-		bool flag = Ref.positionOffset.magnitude2d < 500000.0 && Ref.positionOffset.toVector3 != -base.transform.position;
-		if (flag)
+		if (Ref.positionOffset.magnitude2d < 500000.0 && Ref.positionOffset.toVector3 != -base.transform.position)
 		{
 			this.UpdatePositionOffset(-Ref.positionOffset);
 			this.UpdatePositionOffset(-Ref.positionOffset);
@@ -149,18 +141,15 @@ public class PlanetManager : MonoBehaviour
 		for (int i = 0; i < this.activeChuncks.Count; i++)
 		{
 			PlanetManager.Chunck chunck = this.activeChuncks[i];
-			bool flag = this.totalDistanceMoved > chunck.updateSplit;
-			if (flag)
+			if (this.totalDistanceMoved > chunck.updateSplit)
 			{
-				bool flag2 = this.TrySplitChunck(chunck, detailLevels);
-				bool flag3 = flag2;
-				if (flag3)
+				bool flag = this.TrySplitChunck(chunck, detailLevels);
+				if (flag)
 				{
 					i--;
 				}
 			}
-			bool flag4 = this.totalDistanceMoved > chunck.updateMerge;
-			if (flag4)
+			if (this.totalDistanceMoved > chunck.updateMerge)
 			{
 				this.TryMergeChunck(chunck, detailLevels);
 			}
@@ -171,36 +160,27 @@ public class PlanetManager : MonoBehaviour
 	{
 		double loadDistance = detailLevels[chunck.LODId + 1].loadDistance;
 		double minDistanceToVessels = this.GetMinDistanceToVessels(chunck);
-		bool flag = minDistanceToVessels < loadDistance + 10.0;
-		bool result;
-		if (flag)
+		if (minDistanceToVessels < loadDistance + 10.0)
 		{
 			this.SplitChunck(chunck, detailLevels);
-			result = true;
+			return true;
 		}
-		else
+		if (minDistanceToVessels != double.PositiveInfinity)
 		{
-			bool flag2 = minDistanceToVessels != double.PositiveInfinity;
-			if (flag2)
-			{
-				chunck.updateSplit = this.totalDistanceMoved + Math.Min(minDistanceToVessels - loadDistance, 100000.0);
-			}
-			result = false;
+			chunck.updateSplit = this.totalDistanceMoved + Math.Min(minDistanceToVessels - loadDistance, 100000.0);
 		}
-		return result;
+		return false;
 	}
 
 	private void TryMergeChunck(PlanetManager.Chunck chunck, CelestialBodyData.TerrainData.DetailLevel[] detailLevels)
 	{
 		double loadDistance = detailLevels[chunck.LODId].loadDistance;
 		double minDistanceToVessels = this.GetMinDistanceToVessels(chunck.parentChunck);
-		bool flag = minDistanceToVessels > loadDistance + 10.0;
-		if (flag)
+		if (minDistanceToVessels > loadDistance + 10.0)
 		{
 			this.MergeChunck(chunck);
 		}
-		bool flag2 = minDistanceToVessels != double.PositiveInfinity;
-		if (flag2)
+		if (minDistanceToVessels != double.PositiveInfinity)
 		{
 			chunck.updateMerge = this.totalDistanceMoved + Math.Min(loadDistance - minDistanceToVessels, 100000.0) + 30.0;
 		}
@@ -223,8 +203,7 @@ public class PlanetManager : MonoBehaviour
 		chunck2.updateMerge = double.PositiveInfinity;
 		chunck.chunckTransform.name = "Chunck - Lod: " + (chunckToSplit.LODId + 1).ToString();
 		chunck2.chunckTransform.name = "Chunck - Lod: " + (chunckToSplit.LODId + 1).ToString();
-		bool flag2 = chunckToSplit.LODId + 1 == detailLevels.Length - 1;
-		if (flag2)
+		if (chunckToSplit.LODId + 1 == detailLevels.Length - 1)
 		{
 			chunck.GenerateCollider();
 			chunck2.GenerateCollider();
@@ -243,18 +222,18 @@ public class PlanetManager : MonoBehaviour
 	private void MergeChunck(PlanetManager.Chunck firstHalf)
 	{
 		PlanetManager.Chunck secondHalf = firstHalf.secondHalf;
-		bool flag = !secondHalf.chunckTransform.gameObject.activeSelf;
-		if (!flag)
+		if (!secondHalf.chunckTransform.gameObject.activeSelf)
 		{
-			firstHalf.parentChunck.chunckTransform.gameObject.SetActive(true);
-			this.activeChuncks.Add(firstHalf.parentChunck);
-			this.activeChuncks.Remove(firstHalf);
-			this.activeChuncks.Remove(secondHalf);
-			this.colliderChuncks.Remove(firstHalf);
-			this.colliderChuncks.Remove(secondHalf);
-			UnityEngine.Object.Destroy(firstHalf.chunckTransform.gameObject);
-			UnityEngine.Object.Destroy(firstHalf.secondHalf.chunckTransform.gameObject);
+			return;
 		}
+		firstHalf.parentChunck.chunckTransform.gameObject.SetActive(true);
+		this.activeChuncks.Add(firstHalf.parentChunck);
+		this.activeChuncks.Remove(firstHalf);
+		this.activeChuncks.Remove(secondHalf);
+		this.colliderChuncks.Remove(firstHalf);
+		this.colliderChuncks.Remove(secondHalf);
+		UnityEngine.Object.Destroy(firstHalf.chunckTransform.gameObject);
+		UnityEngine.Object.Destroy(firstHalf.secondHalf.chunckTransform.gameObject);
 	}
 
 	private double GetMaxVesselsVelocity()
@@ -262,12 +241,10 @@ public class PlanetManager : MonoBehaviour
 		double num = 0.0;
 		for (int i = 0; i < Ref.controller.vessels.Count; i++)
 		{
-			bool flag = Ref.controller.vessels[i].state == Vessel.State.RealTime;
-			if (flag)
+			if (Ref.controller.vessels[i].state == Vessel.State.RealTime)
 			{
 				double magnitude2d = Ref.controller.vessels[i].GetGlobalVelocity.magnitude2d;
-				bool flag2 = magnitude2d > num;
-				if (flag2)
+				if (magnitude2d > num)
 				{
 					num = magnitude2d;
 				}
@@ -281,15 +258,13 @@ public class PlanetManager : MonoBehaviour
 		double num = double.PositiveInfinity;
 		for (int i = 0; i < Ref.controller.vessels.Count; i++)
 		{
-			bool flag = Ref.controller.vessels[i].state == Vessel.State.RealTime || Ref.controller.vessels[i].state == Vessel.State.Stationary;
-			if (flag)
+			if (Ref.controller.vessels[i].state == Vessel.State.RealTime || Ref.controller.vessels[i].state == Vessel.State.Stationary)
 			{
 				Double3 @double = (Ref.controller.vessels[i].state != Vessel.State.RealTime) ? Ref.controller.vessels[i].GetGlobalPosition : (Ref.positionOffset + Ref.controller.vessels[i].partsManager.rb2d.transform.position);
 				double closestPointOnLine = Double3.GetClosestPointOnLine(chunck.topPosition, @double);
 				Double3 a = chunck.topPosition * closestPointOnLine;
 				double num2 = (a - @double).magnitude2d - chunck.topSizeHalf * closestPointOnLine;
-				bool flag2 = num2 < num;
-				if (flag2)
+				if (num2 < num)
 				{
 					num = num2;
 				}
@@ -300,17 +275,17 @@ public class PlanetManager : MonoBehaviour
 
 	public void UpdatePositionOffset(Double3 newPlanetOffset)
 	{
-		bool flag = newPlanetOffset.x == Ref.positionOffset.x && newPlanetOffset.y == Ref.positionOffset.y;
-		if (!flag)
+		if (newPlanetOffset.x == Ref.positionOffset.x && newPlanetOffset.y == Ref.positionOffset.y)
 		{
-			Ref.positionOffset = newPlanetOffset;
-			Double3 a = new Double3(-450.0, Ref.controller.loadedPlanet.radius + 28.0);
-			this.launchPad.transform.position = (a - Ref.positionOffset).toVector3;
-			base.transform.position = -Ref.positionOffset.toVector3;
-			for (int i = 0; i < this.colliderChuncks.Count; i++)
-			{
-				this.colliderChuncks[i].chunckTransform.position = -Ref.positionOffset.toVector3 - this.colliderChuncks[i].chunckPosOffset;
-			}
+			return;
+		}
+		Ref.positionOffset = newPlanetOffset;
+		Double3 a = new Double3(-450.0, Ref.controller.loadedPlanet.radius + 28.0);
+		this.launchPad.transform.position = (a - Ref.positionOffset).toVector3;
+		base.transform.position = -Ref.positionOffset.toVector3;
+		for (int i = 0; i < this.colliderChuncks.Count; i++)
+		{
+			this.colliderChuncks[i].chunckTransform.position = -Ref.positionOffset.toVector3 - this.colliderChuncks[i].chunckPosOffset;
 		}
 	}
 
@@ -329,10 +304,6 @@ public class PlanetManager : MonoBehaviour
 		{
 			this.lowRezPlanets.planets[i].meshHolder.localPosition = ((this.lowRezPlanets.planets[i].planet.GetSolarSystemPosition() - solarSystemPosition) * 0.0001).toVector3;
 		}
-	}
-
-	public PlanetManager()
-	{
 	}
 
 	[TableList]
@@ -360,10 +331,6 @@ public class PlanetManager : MonoBehaviour
 	[Serializable]
 	public class LowRezPlanets
 	{
-		public LowRezPlanets()
-		{
-		}
-
 		public List<PlanetManager.LowRezPlanets.LowRezPlanet> planets = new List<PlanetManager.LowRezPlanets.LowRezPlanet>();
 
 		[Serializable]
@@ -378,11 +345,11 @@ public class PlanetManager : MonoBehaviour
 				this.meshHolder.gameObject.layer = LayerMask.NameToLayer("Scaled Space");
 				this.meshHolder.name = planet.bodyName + " Scaled";
 				this.meshHolder.parent = Ref.planetManager.scaledHolder;
-				bool flag = !planet.atmosphereData.hasAtmosphere;
-				if (!flag)
+				if (!planet.atmosphereData.hasAtmosphere)
 				{
-					PlanetManager.LowRezPlanets.LowRezPlanet.CreateAtmosphere(this.meshHolder, planet, planet.atmosphereData.gradientHightMultiplier, "Scaled Space", (planet.type != CelestialBodyData.Type.Star) ? "Back" : "Default", (planet.type != CelestialBodyData.Type.Star) ? 0 : 500, planet.GenerateAtmosphereTexture());
+					return;
 				}
+				PlanetManager.LowRezPlanets.LowRezPlanet.CreateAtmosphere(this.meshHolder, planet, planet.atmosphereData.gradientHightMultiplier, "Scaled Space", (planet.type != CelestialBodyData.Type.Star) ? "Back" : "Default", (planet.type != CelestialBodyData.Type.Star) ? 0 : 500, planet.GenerateAtmosphereTexture());
 			}
 
 			public static void CreateAtmosphere(Transform parent, CelestialBodyData planet, double multiplier, string layer, string sortingLayer, int sortingOrder, Texture2D tex)

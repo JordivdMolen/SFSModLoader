@@ -6,28 +6,37 @@ public class PartChildCollider : MonoBehaviour
 	private void OnValidate()
 	{
 		Transform parent = base.transform.parent;
-		while (parent.GetComponent<Part>() == null)
+		if (parent != null)
 		{
-			parent = parent.parent;
+			while (parent.GetComponent<Part>() == null)
+			{
+				if (!(parent.parent != null))
+				{
+					MonoBehaviour.print(parent.name);
+					break;
+				}
+				parent = parent.parent;
+			}
+			Part component = parent.GetComponent<Part>();
+			this.part = ((!(component != null)) ? this.part : component);
 		}
-		this.part = parent.GetComponent<Part>();
 	}
 
 	private void OnCollisionEnter2D(Collision2D collision)
 	{
-		bool flag = !this.part.vessel.partsManager.partToPartDamage;
-		if (!flag)
+		if (Ref.unbreakableParts)
 		{
-			bool flag2 = collision.relativeVelocity.sqrMagnitude < this.breakVelocity * this.breakVelocity;
-			if (!flag2)
-			{
-				this.part.DestroyPart(true, false);
-			}
+			return;
 		}
-	}
-
-	public PartChildCollider()
-	{
+		if (!this.part.vessel.partsManager.partToPartDamage)
+		{
+			return;
+		}
+		if (collision.relativeVelocity.sqrMagnitude < this.breakVelocity * this.breakVelocity)
+		{
+			return;
+		}
+		this.part.DestroyPart(true, false);
 	}
 
 	public float breakVelocity = 5f;

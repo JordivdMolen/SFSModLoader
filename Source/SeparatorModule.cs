@@ -20,35 +20,26 @@ public class SeparatorModule : Module
 	{
 		get
 		{
-			List<string> result;
-			if (this.showParametersDescription)
+			return (!this.showParametersDescription) ? new List<string>() : new List<string>
 			{
-				(result = new List<string>()).Add("Separation Force: " + this.separationForce.magnitude.ToString() + "kN");
-			}
-			else
-			{
-				result = new List<string>();
-			}
-			return result;
+				"Separation Force: " + this.separationForce.magnitude.ToString() + "kN"
+			};
 		}
 	}
 
 	public override void OnPartUsed()
 	{
-		bool boolValue = this.separated.boolValue;
-		if (!boolValue)
+		if (this.separated.boolValue)
 		{
-			bool timeWarping = Ref.timeWarping;
-			if (timeWarping)
-			{
-				Ref.controller.ShowMsg("Cannot use part while time warping");
-			}
-			else
-			{
-				this.separated.boolValue = true;
-				this.onSeparate.Invoke();
-			}
+			return;
 		}
+		if (Ref.timeWarping)
+		{
+			MsgController.ShowMsg("Cannot use part while time warping");
+			return;
+		}
+		this.separated.boolValue = true;
+		this.onSeparate.Invoke();
 	}
 
 	public void SetSeparated(bool value)
@@ -64,8 +55,7 @@ public class SeparatorModule : Module
 		for (int i = 0; i < this.part.joints.Count; i++)
 		{
 			int num2 = (!(this.part.joints[i].fromPart == this.part)) ? this.part.joints[i].toSurfaceIndex : this.part.joints[i].fromSurfaceIndex;
-			bool flag = num2 == surfaceId;
-			if (flag)
+			if (num2 == surfaceId)
 			{
 				list.Add((!(this.part.joints[i].fromPart == this.part)) ? this.part.joints[i].fromPart : this.part.joints[i].toPart);
 				list2.Add((!(this.part.joints[i].fromPart == this.part)) ? this.part.joints[i].coveredAmount : this.part.joints[i].coveredAmount);
@@ -78,14 +68,12 @@ public class SeparatorModule : Module
 		Vector2 a = Quaternion.Euler(0f, 0f, base.transform.rotation.eulerAngles.z) * new Vector2(this.separationForce.x * (float)this.part.orientation.x, this.separationForce.y * (float)this.part.orientation.y);
 		for (int j = 0; j < list.Count; j++)
 		{
-			bool flag2 = list[j].vessel.partsManager.rb2d != null && !float.IsNaN(list2[j] / num);
-			if (flag2)
+			if (list[j].vessel.partsManager.rb2d != null && !float.IsNaN(list2[j] / num))
 			{
 				list[j].vessel.partsManager.rb2d.AddForceAtPosition(a * (list2[j] / num), relativePoint);
 			}
 		}
-		bool flag3 = list.Count > 0 && this.part.vessel.partsManager.rb2d != null;
-		if (flag3)
+		if (list.Count > 0 && this.part.vessel.partsManager.rb2d != null)
 		{
 			this.part.vessel.partsManager.rb2d.AddForceAtPosition(-a, relativePoint);
 		}
@@ -118,11 +106,9 @@ public class SeparatorModule : Module
 		{
 			Part.Joint joint = part.joints[i];
 			bool flag = joint.fromPart == part;
-			bool flag2 = ((!flag) ? joint.toSurfaceIndex : joint.fromSurfaceIndex) == transferSurfaceId;
-			if (flag2)
+			if (((!flag) ? joint.toSurfaceIndex : joint.fromSurfaceIndex) == transferSurfaceId)
 			{
-				bool flag3 = flag;
-				if (flag3)
+				if (flag)
 				{
 					joint.fromPart = transferToPart;
 					joint.fromSurfaceIndex = toSurfaceId;
@@ -137,10 +123,6 @@ public class SeparatorModule : Module
 				i--;
 			}
 		}
-	}
-
-	public SeparatorModule()
-	{
 	}
 
 	public BoolValueHolder separated;

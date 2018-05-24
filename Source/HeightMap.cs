@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class HeightMap : MonoBehaviour
 {
-	[Button("Generate Height Map", 22)]
+	[Button("Generate Height Map", ButtonSizes.Medium)]
 	private void GenerateHightData()
 	{
 		this.HeightDataArray = new float[this.heightMapTexture.texture.width];
@@ -19,17 +19,12 @@ public class HeightMap : MonoBehaviour
 		for (int i = 0; i < this.heightMapTexture.texture.height; i++)
 		{
 			float a = this.heightMapTexture.texture.GetPixel(x, i).a;
-			bool flag = a < 1f;
-			if (flag)
+			if (a < 1f)
 			{
 				return ((float)i + a) / (float)this.heightMapTexture.texture.height;
 			}
 		}
 		return 1f;
-	}
-
-	public HeightMap()
-	{
 	}
 
 	public Sprite heightMapTexture;

@@ -51,8 +51,7 @@ public class Warning : MonoBehaviour
 	public void CancelAction()
 	{
 		this.CloseWarning();
-		bool flag = this.onCancel != null;
-		if (flag)
+		if (this.onCancel != null)
 		{
 			this.onCancel();
 		}
@@ -61,10 +60,6 @@ public class Warning : MonoBehaviour
 	public void CloseWarning()
 	{
 		base.gameObject.SetActive(false);
-	}
-
-	public Warning()
-	{
 	}
 
 	public Text warningText;

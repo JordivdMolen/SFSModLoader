@@ -42,21 +42,18 @@ public class Map : MonoBehaviour
 	public void ToggleMap()
 	{
 		Ref.mapView = !Ref.mapView;
-		bool mapView = Ref.mapView;
-		if (mapView)
+		if (Ref.mapView)
 		{
 			Ref.cam.cullingMask = Ref.controller.mapView;
 		}
 		base.gameObject.SetActive(Ref.mapView);
-		bool mapView2 = Ref.mapView;
-		if (mapView2)
+		if (Ref.mapView)
 		{
 			foreach (Vessel vessel in Ref.controller.vessels)
 			{
 				vessel.mapIcon.transform.parent = this.mapRefs[vessel.GetVesselPlanet].holder;
 			}
-			bool flag = Ref.selectedVessel == null;
-			if (flag)
+			if (Ref.selectedVessel == null)
 			{
 				this.SelectVessel(Ref.mainVessel, false);
 			}
@@ -76,29 +73,23 @@ public class Map : MonoBehaviour
 	public void SelectCelestilaBodyAsTarget(CelestialBodyData newTarget)
 	{
 		CelestialBodyData celestialBodyData = this.targetPlanet;
-		bool flag = newTarget != celestialBodyData;
-		if (flag)
+		if (newTarget != celestialBodyData)
 		{
 			this.targetPlanet = newTarget;
 			this.mapRefs[newTarget].nameIconText.text = "►" + newTarget.bodyName + "◄";
 			this.mapRefs[newTarget].nameIconText.fontStyle = FontStyle.BoldAndItalic;
-			bool flag2 = celestialBodyData != null;
-			if (flag2)
+			if (celestialBodyData != null)
 			{
 				this.mapRefs[celestialBodyData].nameIconText.text = celestialBodyData.bodyName;
 				this.mapRefs[celestialBodyData].nameIconText.fontStyle = FontStyle.Bold;
 			}
-			Ref.controller.ShowMsg(newTarget.bodyName + " set as target");
+			MsgController.ShowMsg(newTarget.bodyName + " set as target");
 		}
-		else
+		else if (celestialBodyData != null)
 		{
-			bool flag3 = celestialBodyData != null;
-			if (flag3)
-			{
-				this.mapRefs[celestialBodyData].nameIconText.text = celestialBodyData.bodyName;
-				this.mapRefs[celestialBodyData].nameIconText.fontStyle = FontStyle.Bold;
-				this.targetPlanet = null;
-			}
+			this.mapRefs[celestialBodyData].nameIconText.text = celestialBodyData.bodyName;
+			this.mapRefs[celestialBodyData].nameIconText.fontStyle = FontStyle.Bold;
+			this.targetPlanet = null;
 		}
 		Ref.inputController.PlayClickSound(0.2f);
 		this.CreateNewTransferWindow();
@@ -106,21 +97,20 @@ public class Map : MonoBehaviour
 
 	public void SelectVessel(Vessel newSelectedVessel, bool playSound)
 	{
-		bool flag = newSelectedVessel == null;
-		if (!flag)
+		if (newSelectedVessel == null)
 		{
-			bool flag2 = playSound && Ref.selectedVessel != newSelectedVessel;
-			if (flag2)
-			{
-				Ref.inputController.PlayClickSound(0.2f);
-			}
-			Ref.selectedVessel = newSelectedVessel;
-			this.UpdateVesselsMapIcons();
-			Ref.controller.UpdateVesselButtons();
-			this.DrawOrbitLines();
-			this.UpdateMapZoom(this.mapPosition.z);
-			this.CreateNewTransferWindow();
+			return;
 		}
+		if (playSound && Ref.selectedVessel != newSelectedVessel)
+		{
+			Ref.inputController.PlayClickSound(0.2f);
+		}
+		Ref.selectedVessel = newSelectedVessel;
+		this.UpdateVesselsMapIcons();
+		Ref.controller.UpdateVesselButtons();
+		this.DrawOrbitLines();
+		this.UpdateMapZoom(this.mapPosition.z);
+		this.CreateNewTransferWindow();
 	}
 
 	private void CreateNewTransferWindow()
@@ -133,17 +123,15 @@ public class Map : MonoBehaviour
 	{
 		bool flag = false;
 		TransferWindow.PositionPlanetMarker(ref flag, ref this.transferWindowPlanet, this.transferWindowData);
-		bool flag2 = this.transferWindowPlanet.gameObject.activeSelf != flag;
-		if (flag2)
+		if (this.transferWindowPlanet.gameObject.activeSelf != flag)
 		{
 			this.transferWindowPlanet.gameObject.SetActive(flag);
 		}
-		bool flag3 = false;
-		TransferWindow.PositionOrbitMarker(ref flag3, ref this.transferWindowOrbit, orbits, this.transferWindowData);
-		bool flag4 = this.transferWindowOrbit.gameObject.activeSelf != flag3;
-		if (flag4)
+		bool flag2 = false;
+		TransferWindow.PositionOrbitMarker(ref flag2, ref this.transferWindowOrbit, orbits, this.transferWindowData);
+		if (this.transferWindowOrbit.gameObject.activeSelf != flag2)
 		{
-			this.transferWindowOrbit.gameObject.SetActive(flag3);
+			this.transferWindowOrbit.gameObject.SetActive(flag2);
 		}
 	}
 
@@ -155,14 +143,12 @@ public class Map : MonoBehaviour
 			Ref.controller.vessels[i].mapIcon.GetComponent<SpriteRenderer>().color = new Color(0.72f, 0.72f, 0.72f, 1f);
 			Ref.controller.vessels[i].mapIcon.GetComponent<SpriteRenderer>().sortingOrder = 13;
 		}
-		bool flag = Ref.mainVessel != null;
-		if (flag)
+		if (Ref.mainVessel != null)
 		{
 			Ref.mainVessel.mapIcon.localScale = new Vector3(0.015f, 0.015f);
 			Ref.mainVessel.mapIcon.GetComponent<SpriteRenderer>().sortingOrder = 14;
 		}
-		bool flag2 = Ref.selectedVessel != null;
-		if (flag2)
+		if (Ref.selectedVessel != null)
 		{
 			Ref.selectedVessel.mapIcon.GetComponent<SpriteRenderer>().color = Color.white;
 			Ref.selectedVessel.mapIcon.GetComponent<SpriteRenderer>().sortingOrder = 15;
@@ -171,39 +157,35 @@ public class Map : MonoBehaviour
 
 	private void LateUpdate()
 	{
-		bool flag = !Ref.mapView;
-		if (!flag)
+		if (!Ref.mapView)
 		{
-			Double3 offset = this.GetOffset();
-			Ref.cam.transform.position = ((this.following.GetFollowingBody().type != CelestialBodyData.Type.Star) ? this.mapPosition.toVector3 : (this.mapPosition - offset).toVector3);
-			this.PositionPlanets(offset);
-			List<Orbit> vesselOrbits = this.GetVesselOrbits(Ref.mainVessel);
-			List<Orbit> list = (!(Ref.selectedVessel == Ref.mainVessel)) ? this.GetVesselOrbits(Ref.selectedVessel) : new List<Orbit>();
-			this.DrawOrbitLines(vesselOrbits, list);
-			bool flag2 = false;
-			bool flag3 = this.targetPlanet != null;
-			if (flag3)
-			{
-				ClosestApproach.DrawClosestApproachPlanet(this.closestApproachLinePlanet, this.GetVesselOrbits(Ref.mainVessel), this.targetPlanet, ref flag2);
-			}
-			bool flag4 = this.closestApproachLinePlanet.gameObject.activeSelf != flag2;
-			if (flag4)
-			{
-				this.closestApproachLinePlanet.gameObject.SetActive(flag2);
-			}
-			bool flag5 = false;
-			bool flag6 = Ref.selectedVessel != null && Ref.selectedVessel != Ref.mainVessel;
-			if (flag6)
-			{
-				ClosestApproach.DrawClosestApproachVessel(this.closestApproachLineVessel, this.GetVesselOrbits(Ref.mainVessel), this.GetVesselOrbits(Ref.selectedVessel), ref flag5);
-			}
-			bool flag7 = this.closestApproachLineVessel.gameObject.activeSelf != flag5;
-			if (flag7)
-			{
-				this.closestApproachLineVessel.gameObject.SetActive(flag5);
-			}
-			this.PositionTransferWindowMarkers((vesselOrbits.Count <= 0) ? list : vesselOrbits);
+			return;
 		}
+		Double3 offset = this.GetOffset();
+		Ref.cam.transform.position = ((this.following.GetFollowingBody().type != CelestialBodyData.Type.Star) ? this.mapPosition.toVector3 : (this.mapPosition - offset).toVector3);
+		this.PositionPlanets(offset);
+		List<Orbit> vesselOrbits = this.GetVesselOrbits(Ref.mainVessel);
+		List<Orbit> list = (!(Ref.selectedVessel == Ref.mainVessel)) ? this.GetVesselOrbits(Ref.selectedVessel) : new List<Orbit>();
+		this.DrawOrbitLines(vesselOrbits, list);
+		bool flag = false;
+		if (this.targetPlanet != null)
+		{
+			ClosestApproach.DrawClosestApproachPlanet(this.closestApproachLinePlanet, this.GetVesselOrbits(Ref.mainVessel), this.targetPlanet, ref flag);
+		}
+		if (this.closestApproachLinePlanet.gameObject.activeSelf != flag)
+		{
+			this.closestApproachLinePlanet.gameObject.SetActive(flag);
+		}
+		bool flag2 = false;
+		if (Ref.selectedVessel != null && Ref.selectedVessel != Ref.mainVessel)
+		{
+			ClosestApproach.DrawClosestApproachVessel(this.closestApproachLineVessel, this.GetVesselOrbits(Ref.mainVessel), this.GetVesselOrbits(Ref.selectedVessel), ref flag2);
+		}
+		if (this.closestApproachLineVessel.gameObject.activeSelf != flag2)
+		{
+			this.closestApproachLineVessel.gameObject.SetActive(flag2);
+		}
+		this.PositionTransferWindowMarkers((vesselOrbits.Count <= 0) ? list : vesselOrbits);
 	}
 
 	public void DrawOrbitLines()
@@ -234,87 +216,61 @@ public class Map : MonoBehaviour
 
 	private List<Orbit> GetVesselOrbits(Vessel vessel)
 	{
-		bool flag = vessel == null;
-		List<Orbit> result;
-		if (flag)
+		if (vessel == null)
 		{
-			result = new List<Orbit>();
+			return new List<Orbit>();
 		}
-		else
+		if (vessel.state == Vessel.State.RealTime)
 		{
-			bool flag2 = vessel.state == Vessel.State.RealTime;
-			if (flag2)
+			Double3 velIn = Ref.velocityOffset + vessel.partsManager.rb2d.velocity;
+			if (velIn.sqrMagnitude2d > 4.0)
 			{
-				Double3 velIn = Ref.velocityOffset + vessel.partsManager.rb2d.velocity;
-				bool flag3 = velIn.sqrMagnitude2d > 4.0;
-				if (flag3)
-				{
-					return Orbit.CalculateOrbits(vessel.GetGlobalPosition, velIn, Ref.controller.loadedPlanet);
-				}
+				return Orbit.CalculateOrbits(vessel.GetGlobalPosition, velIn, Ref.controller.loadedPlanet);
 			}
-			result = vessel.orbits;
 		}
-		return result;
+		return vessel.orbits;
 	}
 
 	private Double3 GetOffset()
 	{
 		CelestialBodyData.Type type = this.following.GetFollowingBody().type;
-		bool flag = type == CelestialBodyData.Type.Star;
-		Double3 result;
-		if (flag)
+		if (type == CelestialBodyData.Type.Star)
 		{
-			result = new Double3(this.mapPosition.roundTo1000.x, this.mapPosition.roundTo1000.y, this.mapPosition.z);
+			return new Double3(this.mapPosition.roundTo1000.x, this.mapPosition.roundTo1000.y, this.mapPosition.z);
 		}
-		else
+		if (type == CelestialBodyData.Type.Planet)
 		{
-			bool flag2 = type == CelestialBodyData.Type.Planet;
-			if (flag2)
-			{
-				result = this.following.GetFollowingBody().GetPosOut(Ref.controller.globalTime) / 10000.0;
-			}
-			else
-			{
-				bool flag3 = type != CelestialBodyData.Type.Moon;
-				if (flag3)
-				{
-					result = Double3.zero;
-				}
-				else
-				{
-					result = (this.following.GetFollowingBody().GetPosOut(Ref.controller.globalTime) + this.following.GetFollowingBody().parentBody.GetPosOut(Ref.controller.globalTime)) / 10000.0;
-				}
-			}
+			return this.following.GetFollowingBody().GetPosOut(Ref.controller.globalTime) / 10000.0;
 		}
-		return result;
+		if (type != CelestialBodyData.Type.Moon)
+		{
+			return Double3.zero;
+		}
+		return (this.following.GetFollowingBody().GetPosOut(Ref.controller.globalTime) + this.following.GetFollowingBody().parentBody.GetPosOut(Ref.controller.globalTime)) / 10000.0;
 	}
 
 	public void OnClickEmpty(Vector2 clickPosWorld)
 	{
 		CelestialBodyData celestialBodyData = this.PointCastMapPlanets(clickPosWorld);
-		bool flag = celestialBodyData != null;
-		if (flag)
+		if (celestialBodyData != null)
 		{
 			this.SelectCelestilaBodyAsTarget(celestialBodyData);
+			return;
 		}
-		else
+		Vessel vessel = this.PointCastVessels(clickPosWorld);
+		if (vessel != null)
 		{
-			Vessel vessel = this.PointCastVessels(clickPosWorld);
-			bool flag2 = vessel != null;
-			if (flag2)
-			{
-				Ref.map.SelectVessel(vessel, true);
-			}
+			Ref.map.SelectVessel(vessel, true);
+			return;
 		}
 	}
 
 	private CelestialBodyData PointCastMapPlanets(Vector2 clickPos)
 	{
-		float num = Mathf.Pow(0.035f * -(float)Ref.map.mapPosition.z, 2f);
+		float num = Mathf.Pow(0.035f * (float)(-(float)Ref.map.mapPosition.z), 2f);
 		CelestialBodyData result = null;
 		float sqrMagnitude = (this.mapRefs[Ref.solarSystemRoot].nameIconText.transform.position - (Vector3)clickPos).sqrMagnitude;
-		bool flag = sqrMagnitude < num && this.mapRefs[Ref.solarSystemRoot].nameIconText.color.a > 0.05f;
-		if (flag)
+		if (sqrMagnitude < num && this.mapRefs[Ref.solarSystemRoot].nameIconText.color.a > 0.05f)
 		{
 			num = sqrMagnitude;
 			result = Ref.solarSystemRoot;
@@ -322,8 +278,7 @@ public class Map : MonoBehaviour
 		foreach (CelestialBodyData celestialBodyData in Ref.solarSystemRoot.satellites)
 		{
 			float sqrMagnitude2 = (this.mapRefs[celestialBodyData].nameIconText.transform.position - (Vector3)clickPos).sqrMagnitude;
-			bool flag2 = sqrMagnitude2 < num && this.mapRefs[celestialBodyData].nameIconText.color.a > 0.05f;
-			if (flag2)
+			if (sqrMagnitude2 < num && this.mapRefs[celestialBodyData].nameIconText.color.a > 0.05f)
 			{
 				num = sqrMagnitude2;
 				result = celestialBodyData;
@@ -331,8 +286,7 @@ public class Map : MonoBehaviour
 			foreach (CelestialBodyData celestialBodyData2 in celestialBodyData.satellites)
 			{
 				float sqrMagnitude3 = (this.mapRefs[celestialBodyData2].nameIconText.transform.position - (Vector3)clickPos).sqrMagnitude;
-				bool flag3 = sqrMagnitude3 < num && this.mapRefs[celestialBodyData2].nameIconText.color.a > 0.05f;
-				if (flag3)
+				if (sqrMagnitude3 < num && this.mapRefs[celestialBodyData2].nameIconText.color.a > 0.05f)
 				{
 					num = sqrMagnitude3;
 					result = celestialBodyData2;
@@ -344,13 +298,12 @@ public class Map : MonoBehaviour
 
 	private Vessel PointCastVessels(Vector2 clickPos)
 	{
-		float num = Mathf.Pow(0.03f * -(float)Ref.map.mapPosition.z, 2f);
+		float num = Mathf.Pow(0.03f * (float)(-(float)Ref.map.mapPosition.z), 2f);
 		Vessel result = null;
 		for (int i = 0; i < Ref.controller.vessels.Count; i++)
 		{
 			float sqrMagnitude = (Ref.controller.vessels[i].mapIcon.position - (Vector3)clickPos).sqrMagnitude;
-			bool flag = sqrMagnitude < num;
-			if (flag)
+			if (sqrMagnitude < num)
 			{
 				num = sqrMagnitude;
 				result = Ref.controller.vessels[i];
@@ -362,8 +315,7 @@ public class Map : MonoBehaviour
 	public void UpdateMapPosition(Double3 newMapPosition)
 	{
 		this.mapPosition = new Double3(newMapPosition.x, newMapPosition.y, this.mapPosition.z);
-		bool flag = this.mapPosition.magnitude2d > this.following.GetFollowingBody().orbitData.SOI * 3.0 / 10000.0;
-		if (flag)
+		if (this.mapPosition.magnitude2d > this.following.GetFollowingBody().orbitData.SOI * 3.0 / 10000.0)
 		{
 			this.SwitchFollowingBody(this.following.GetFollowingBody().parentBody);
 		}
@@ -372,31 +324,26 @@ public class Map : MonoBehaviour
 
 	public void UpdateMapZoom(double newZoom)
 	{
-		bool flag = newZoom < 0.0;
-		if (flag)
+		if (newZoom < 0.0)
 		{
 			newZoom = -newZoom;
 		}
-		bool flag2 = newZoom > 20000000.0;
-		if (flag2)
+		if (newZoom > 20000000.0)
 		{
 			newZoom = 20000000.0;
 		}
-		bool flag3 = newZoom < 0.15000000596046448;
-		if (flag3)
+		if (newZoom < 0.15000000596046448)
 		{
 			newZoom = 0.15000000596046448;
 		}
 		this.mapPosition.z = -newZoom;
-		bool flag4 = this.following.GetFollowingBody().orbitData.SOI * 10.0 / 10000.0 < -this.mapPosition.z;
-		if (flag4)
+		if (this.following.GetFollowingBody().orbitData.SOI * 10.0 / 10000.0 < -this.mapPosition.z)
 		{
 			this.SwitchFollowingBody(this.following.GetFollowingBody().parentBody);
 		}
 		this.TryFollowSattelites();
 		this.UpdateOrbitLinesVisibility();
-		bool flag5 = this.transferWindowData.transferType == TransferWindow.TransferType.ToNeighbour;
-		if (flag5)
+		if (this.transferWindowData.transferType == TransferWindow.TransferType.ToNeighbour)
 		{
 			TransferWindow.UpdateTransferWindowAlpha(this.transferWindowPlanet.GetComponent<MeshRenderer>().sharedMaterial, this.transferWindowData);
 		}
@@ -404,10 +351,10 @@ public class Map : MonoBehaviour
 
 	private void UpdateOrbitLinesVisibility()
 	{
-		this.orbitLineWidth = 0.004f * -(float)Ref.map.mapPosition.z;
+		this.orbitLineWidth = 0.004f * (float)(-(float)Ref.map.mapPosition.z);
 		this.orbitLineMaterials[CelestialBodyData.Type.Planet].color = ((this.following.GetFollowingBody().type != CelestialBodyData.Type.Moon) ? Color.white : new Color(1f, 1f, 1f, this.GetOrbitLineAlpha(this.following.GetFollowingBody().orbitData.SOI / 10000.0)));
 		this.orbitLineMaterials[CelestialBodyData.Type.Star].color = ((this.following.GetFollowingBody().type != CelestialBodyData.Type.Star) ? new Color(1f, 1f, 1f, this.GetOrbitLineAlpha(((this.following.GetFollowingBody().type != CelestialBodyData.Type.Planet) ? this.following.GetFollowingBody().parentBody : this.following.GetFollowingBody()).orbitData.SOI / 10000.0)) : Color.white);
-		this.UpdateCelesialBodysOrbitLinesVisibility(Ref.solarSystemRoot, Vector3.one * (0.004f * -(float)Ref.map.mapPosition.z));
+		this.UpdateCelesialBodysOrbitLinesVisibility(Ref.solarSystemRoot, Vector3.one * (0.004f * (float)(-(float)Ref.map.mapPosition.z)));
 		this.mainLines.UpdateLinesWidth(this.orbitLineWidth);
 		this.selectedLines.UpdateLinesWidth(this.orbitLineWidth);
 		this.closestApproachLinePlanet.widthMultiplier = this.orbitLineWidth * 0.85f;
@@ -428,7 +375,7 @@ public class Map : MonoBehaviour
 	private float GetOrbitLineAlpha(double followingSOI)
 	{
 		float num = Mathf.Clamp01((float)(this.mapPosition.magnitude2d / (followingSOI * 3.0)) * 4f - 3f);
-		float num2 = Mathf.Clamp01((float)((double)(-(double)((float)this.mapPosition.z)) / (followingSOI * 3.5) - 1.0) * 1.5f);
+		float num2 = Mathf.Clamp01((float)(-(float)this.mapPosition.z / (followingSOI * 3.5) - 1.0) * 1.5f);
 		return Mathf.Pow((num <= num2) ? num2 : num, 2f);
 	}
 
@@ -436,8 +383,7 @@ public class Map : MonoBehaviour
 	{
 		foreach (CelestialBodyData celestialBodyData in this.following.GetFollowingBody().satellites)
 		{
-			bool flag = celestialBodyData.orbitData.SOI * 10.0 / 10000.0 > -this.mapPosition.z && (celestialBodyData.GetPosOut(Ref.controller.globalTime) / 10000.0 - this.mapPosition).magnitude2d < celestialBodyData.orbitData.SOI * 3.0 / 10000.0;
-			if (flag)
+			if (celestialBodyData.orbitData.SOI * 10.0 / 10000.0 > -this.mapPosition.z && (celestialBodyData.GetPosOut(Ref.controller.globalTime) / 10000.0 - this.mapPosition).magnitude2d < celestialBodyData.orbitData.SOI * 3.0 / 10000.0)
 			{
 				this.SwitchFollowingBody(celestialBodyData);
 			}
@@ -447,13 +393,11 @@ public class Map : MonoBehaviour
 	private void SwitchFollowingBody(CelestialBodyData newFollow)
 	{
 		Double3 @double = Double3.zero;
-		bool flag = newFollow.parentBody == this.following.targetPlanet;
-		if (flag)
+		if (newFollow.parentBody == this.following.targetPlanet)
 		{
 			@double = -newFollow.GetPosOut(Ref.controller.globalTime);
 		}
-		bool flag2 = this.following.targetPlanet.parentBody == newFollow;
-		if (flag2)
+		if (this.following.targetPlanet.parentBody == newFollow)
 		{
 			@double = this.following.targetPlanet.GetPosOut(Ref.controller.globalTime);
 		}
@@ -531,8 +475,7 @@ public class Map : MonoBehaviour
 		component.color = color;
 		component.sortingLayerName = "Map";
 		component.sortingOrder = sortingOrder;
-		bool flag = circleName == "SOI";
-		if (flag)
+		if (circleName == "SOI")
 		{
 			component.sprite = this.spriteSOI;
 		}
@@ -540,23 +483,19 @@ public class Map : MonoBehaviour
 
 	public void UpdateCameraRotation(Vector3 camRotation)
 	{
-		bool flag = this.mapRefs[Ref.solarSystemRoot].nameIconText.transform.localEulerAngles == camRotation;
-		if (!flag)
+		if (this.mapRefs[Ref.solarSystemRoot].nameIconText.transform.localEulerAngles == camRotation)
 		{
-			this.mapRefs[Ref.solarSystemRoot].nameIconText.transform.localEulerAngles = camRotation;
-			foreach (CelestialBodyData celestialBodyData in Ref.solarSystemRoot.satellites)
+			return;
+		}
+		this.mapRefs[Ref.solarSystemRoot].nameIconText.transform.localEulerAngles = camRotation;
+		foreach (CelestialBodyData celestialBodyData in Ref.solarSystemRoot.satellites)
+		{
+			this.mapRefs[celestialBodyData].nameIconText.transform.localEulerAngles = camRotation;
+			foreach (CelestialBodyData key in celestialBodyData.satellites)
 			{
-				this.mapRefs[celestialBodyData].nameIconText.transform.localEulerAngles = camRotation;
-				foreach (CelestialBodyData key in celestialBodyData.satellites)
-				{
-					this.mapRefs[key].nameIconText.transform.localEulerAngles = camRotation;
-				}
+				this.mapRefs[key].nameIconText.transform.localEulerAngles = camRotation;
 			}
 		}
-	}
-
-	public Map()
-	{
 	}
 
 	public const double mapScale = 10000.0;
