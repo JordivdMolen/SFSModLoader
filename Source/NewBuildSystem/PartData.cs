@@ -73,10 +73,6 @@ namespace NewBuildSystem
 			}
 		}
 
-		public PartData()
-		{
-		}
-
 		public string displayName;
 
 		[TextArea(1, 10)]
