@@ -830,6 +830,7 @@ namespace NewBuildSystem
 					this.partName = part.partData.name;
 					this.position = part.position;
 					this.orientation = part.orientation;
+                    this.GUID = part.partData.GUID;
 
                     //Tags formatting for save
                     StringBuilder stringBuilder = new StringBuilder();
@@ -867,7 +868,7 @@ namespace NewBuildSystem
 						bool flag = partByName != null;
 						if (flag)
 						{
-
+                            partByName.GUID = parts[i].GUID;
                             //Tags parsing from text back to a Dictionary
                             partByName.tags = new Dictionary<string, object>();
                             try
@@ -922,6 +923,8 @@ namespace NewBuildSystem
 
                 //Custom field for custom values saving
                 public string tagsString;
+
+                public Guid GUID;
             }
 		}
 	}

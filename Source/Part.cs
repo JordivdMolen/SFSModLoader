@@ -458,6 +458,7 @@ public class Part : MonoBehaviour
                 }));
             }
             this.tagsString = sb.ToString();
+            this.GUID = part.partData.GUID;
         }
 
 		[Header("Part")]
@@ -468,5 +469,7 @@ public class Part : MonoBehaviour
 		public Module.Save[] moduleSaves;
 
         public string tagsString;
+
+        public Guid GUID;
     }
 }
