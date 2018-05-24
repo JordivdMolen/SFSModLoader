@@ -2,7 +2,8 @@
 
 public class ControlModule : Module
 {
-	public ControlModule()
-	{
-	}
+    public override bool IsSorted()
+    {
+        return true;
+    }
 }

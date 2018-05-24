@@ -1,11 +1,12 @@
 ﻿using System;
+using JMtech.Main;
 using NewBuildSystem;
-using SFSML;
-using SFSML.HookSystem.ReWork;
-using SFSML.HookSystem.ReWork.BaseHooks.FrameHooks;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using SFSML.HookSystem.ReWork.BaseHooks.FrameHooks;
+using SFSML.HookSystem.ReWork;
+using SFSML;
 
 public class Ref : MonoBehaviour
 {
@@ -25,7 +26,7 @@ public class Ref : MonoBehaviour
 
 	[BoxGroup("Game Scene", true, false, 0)]
 	[ShowInInspector]
-	[Title("", null, 0, false, false)]
+	[Title("", null, TitleAlignments.Left, false, false)]
 	private Vessel MainVessel
 	{
 		get
@@ -212,22 +213,25 @@ public class Ref : MonoBehaviour
 	private void Awake()
 	{
 		SFSMLBase.initialize();
-		Ref.hasPartsExpansion = Saving.LoadSetting(Saving.SettingKey.hasPartDLC);
-		Ref.hasHackedExpansion = Saving.LoadSetting(Saving.SettingKey.hasHackedDLC);
-		Ref.infiniteFuel = Saving.LoadSetting(Saving.SettingKey.infiniteFuel);
-		Ref.noDrag = Saving.LoadSetting(Saving.SettingKey.noDrag);
-		Ref.cam = this.Camera;
-		Ref.inputController = this.InputController;
-		Ref.saving = this.Saving;
-		Ref.warning = this.Warning;
-		Ref.currentScene = this.CurrentScene;
-		Ref.lastScene = this.LastScene;
-		Ref.controller = this.Controller;
-		Ref.planetManager = this.PlanetManager;
-		Ref.map = this.Map;
-		Ref.solarSystemRoot = this.SolarSystemRoot;
-		Ref.partShader = this.PartShader;
-	}
+        Ref.hasPartsExpansion = Saving.LoadSetting(Saving.SettingKey.hasPartDLC);
+        Ref.infiniteFuel = Saving.LoadSetting(Saving.SettingKey.infiniteFuel);
+        Ref.noDrag = Saving.LoadSetting(Saving.SettingKey.noDrag);
+        Ref.unbreakableParts = Saving.LoadSetting(Saving.SettingKey.unbreakableParts);
+        Ref.noGravity = Saving.LoadSetting(Saving.SettingKey.noGravity);
+        Ref.orbitInfo = Saving.LoadSetting(Saving.SettingKey.orbitInfo);
+        Ref.cam = this.Camera;
+        Ref.inputController = this.InputController;
+        Ref.saving = this.Saving;
+        Ref.warning = this.Warning;
+        Ref.currentScene = this.CurrentScene;
+        Ref.lastScene = this.LastScene;
+        Ref.controller = this.Controller;
+        Ref.planetManager = this.PlanetManager;
+        Ref.map = this.Map;
+        Ref.solarSystemRoot = this.SolarSystemRoot;
+        Ref.partShader = this.PartShader;
+        GameTracker.tryStart();
+    }
 
 	private void Update()
 	{
@@ -243,88 +247,78 @@ public class Ref : MonoBehaviour
 		}
 	}
 
-	public void Toggle()
-	{
-		Saving.ToggleSetting(Saving.SettingKey.hasPartDLC);
-		Ref.hasPartsExpansion = Saving.LoadSetting(Saving.SettingKey.hasPartDLC);
-		bool flag = Build.main != null;
-		if (flag)
-		{
-			Build.main.buildGrid.SetBuildGridSize();
-			Build.main.pickGrid.SelectPickList(Build.main.pickGrid.selectedListId);
-			Build.main.PositionCameraStart();
-		}
-		MonoBehaviour.print(Saving.LoadSetting(Saving.SettingKey.hasPartDLC));
-	}
+    public void Toggle()
+    {
+        Saving.ToggleSetting(Saving.SettingKey.hasPartDLC);
+        Ref.hasPartsExpansion = Saving.LoadSetting(Saving.SettingKey.hasPartDLC);
+        if (Build.main != null)
+        {
+            Build.main.buildGrid.SetBuildGridSize();
+            Build.main.pickGrid.SelectPickList(Build.main.pickGrid.selectedListId);
+            Build.main.PositionCameraStart();
+        }
+        MonoBehaviour.print(Saving.LoadSetting(Saving.SettingKey.hasPartDLC));
+    }
 
-	public static void Label(float x, float y, float width, float height, Texture2D texture)
-	{
-		GUI.Label(new Rect(x, y, width, height), texture);
-	}
+    public static void Label(float x, float y, float width, float height, Texture2D texture)
+    {
+        GUI.Label(new Rect(x, y, width, height), texture);
+    }
 
-	public static void Box(float x, float y, float width, float height, Texture2D texture)
-	{
-		GUI.Box(new Rect(x, y, width, height), texture);
-	}
+    public static void Box(float x, float y, float width, float height, Texture2D texture)
+    {
+        GUI.Box(new Rect(x, y, width, height), texture);
+    }
 
-	public static void SaveJsonString(string jsonString, Saving.SaveKey fileName)
-	{
-		PlayerPrefs.SetString(fileName.ToString(), jsonString);
-		PlayerPrefs.Save();
-	}
+    public static void SaveJsonString(string jsonString, Saving.SaveKey fileName)
+    {
+        PlayerPrefs.SetString(fileName.ToString(), jsonString);
+        PlayerPrefs.Save();
+    }
 
-	public static string LoadJsonString(Saving.SaveKey fileName)
-	{
-		return PlayerPrefs.GetString(fileName.ToString(), string.Empty);
-	}
+    public static string LoadJsonString(Saving.SaveKey fileName)
+    {
+        return PlayerPrefs.GetString(fileName.ToString(), string.Empty);
+    }
 
-	public static bool FileExists(Saving.SaveKey fileName)
-	{
-		return PlayerPrefs.HasKey(fileName.ToString());
-	}
+    public static bool FileExists(Saving.SaveKey fileName)
+    {
+        return PlayerPrefs.HasKey(fileName.ToString());
+    }
 
-	public static void DeleteFile(Saving.SaveKey fileName)
-	{
-		bool flag = Ref.FileExists(fileName);
-		if (flag)
-		{
-			PlayerPrefs.DeleteKey(fileName.ToString());
-		}
-	}
+    public static void DeleteFile(Saving.SaveKey fileName)
+    {
+        if (Ref.FileExists(fileName))
+        {
+            PlayerPrefs.DeleteKey(fileName.ToString());
+        }
+    }
 
-	public static CelestialBodyData GetPlanetByName(string adress)
-	{
-		bool flag = adress == Ref.solarSystemRoot.bodyName;
-		CelestialBodyData result;
-		if (flag)
-		{
-			result = Ref.solarSystemRoot;
-		}
-		else
-		{
-			foreach (CelestialBodyData celestialBodyData in Ref.solarSystemRoot.satellites)
-			{
-				bool flag2 = celestialBodyData.bodyName == adress;
-				if (flag2)
-				{
-					return celestialBodyData;
-				}
-				foreach (CelestialBodyData celestialBodyData2 in celestialBodyData.satellites)
-				{
-					bool flag3 = celestialBodyData2.bodyName == adress;
-					if (flag3)
-					{
-						return celestialBodyData2;
-					}
-				}
-			}
-			MonoBehaviour.print(" Could not find a celestial body with this adress");
-			result = null;
-		}
-		return result;
-	}
+    public static CelestialBodyData GetPlanetByName(string adress)
+    {
+        if (adress == Ref.solarSystemRoot.bodyName)
+        {
+            return Ref.solarSystemRoot;
+        }
+        foreach (CelestialBodyData celestialBodyData in Ref.solarSystemRoot.satellites)
+        {
+            if (celestialBodyData.bodyName == adress)
+            {
+                return celestialBodyData;
+            }
+            foreach (CelestialBodyData celestialBodyData2 in celestialBodyData.satellites)
+            {
+                if (celestialBodyData2.bodyName == adress)
+                {
+                    return celestialBodyData2;
+                }
+            }
+        }
+        MonoBehaviour.print(" Could not find a celestial body with this adress");
+        return null;
+    }
 
-	public static float GetSizeOfWord(TextMesh text, string word)
+    public static float GetSizeOfWord(TextMesh text, string word)
 	{
 		float num = 0f;
 		foreach (char ch in word)
@@ -336,108 +330,110 @@ public class Ref : MonoBehaviour
 		return num;
 	}
 
-	public Ref()
-	{
-	}
+    [BoxGroup("All Scenes", true, false, 0)]
+    [Space]
+    public Camera Camera;
 
-	[BoxGroup("All Scenes", true, false, 0)]
-	[Space]
-	public Camera Camera;
+    public static Camera cam;
 
-	public static Camera cam;
+    [BoxGroup("All Scenes", true, false, 0)]
+    public InputController InputController;
 
-	[BoxGroup("All Scenes", true, false, 0)]
-	public InputController InputController;
+    public static InputController inputController;
 
-	public static InputController inputController;
+    [BoxGroup("All Scenes", true, false, 0)]
+    public Warning Warning;
 
-	[BoxGroup("All Scenes", true, false, 0)]
-	public Warning Warning;
+    public static Warning warning;
 
-	public static Warning warning;
+    [BoxGroup("All Scenes", true, false, 0)]
+    [Space]
+    public Ref.SceneType CurrentScene;
 
-	[BoxGroup("All Scenes", true, false, 0)]
-	[Space]
-	public Ref.SceneType CurrentScene;
+    public static Ref.SceneType currentScene;
 
-	public static Ref.SceneType currentScene;
+    public static Ref.SceneType lastScene;
 
-	public static Ref.SceneType lastScene;
+    [BoxGroup("Game Scene", true, false, 0)]
+    [Space]
+    public Controller Controller;
 
-	[BoxGroup("Game Scene", true, false, 0)]
-	[Space]
-	public Controller Controller;
+    public static Controller controller;
 
-	public static Controller controller;
+    [BoxGroup("Game Scene", true, false, 0)]
+    public PlanetManager PlanetManager;
 
-	[BoxGroup("Game Scene", true, false, 0)]
-	public PlanetManager PlanetManager;
+    public static PlanetManager planetManager;
 
-	public static PlanetManager planetManager;
+    [BoxGroup("Game Scene", true, false, 0)]
+    public Map Map;
 
-	[BoxGroup("Game Scene", true, false, 0)]
-	public Map Map;
+    public static Map map;
 
-	public static Map map;
+    [BoxGroup("Game Scene", true, false, 0)]
+    [Space]
+    public CelestialBodyData SolarSystemRoot;
 
-	[BoxGroup("Game Scene", true, false, 0)]
-	[Space]
-	public CelestialBodyData SolarSystemRoot;
+    public static CelestialBodyData solarSystemRoot;
 
-	public static CelestialBodyData solarSystemRoot;
+    public static Vessel mainVessel;
 
-	public static Vessel mainVessel;
+    public static Vessel selectedVessel;
 
-	public static Vessel selectedVessel;
+    public static bool timeWarping;
 
-	public static bool timeWarping;
+    public static bool mapView;
 
-	public static bool mapView;
+    public static double mainVesselHeight;
 
-	public static double mainVesselHeight;
+    public static double mainVesselTerrainHeight;
 
-	public static double mainVesselTerrainHeight;
+    public static float mainVesselAngleToPlanet;
 
-	public static float mainVesselAngleToPlanet;
+    public static Double3 positionOffset;
 
-	public static Double3 positionOffset;
+    public static Double3 velocityOffset;
 
-	public static Double3 velocityOffset;
+    [BoxGroup("Some Scenes", true, false, 0)]
+    [Space]
+    public Saving Saving;
 
-	[BoxGroup("Some Scenes", true, false, 0)]
-	[Space]
-	public Saving Saving;
+    public static Saving saving;
 
-	public static Saving saving;
+    [BoxGroup("Some Scenes", true, false, 0)]
+    [Space]
+    public Material PartShader;
 
-	[BoxGroup("Some Scenes", true, false, 0)]
-	[Space]
-	public Material PartShader;
+    public static Material partShader;
 
-	public static Material partShader;
+    public static int connectionCheckId;
 
-	public static int connectionCheckId;
+    public static bool openTutorial;
 
-	public static bool openTutorial;
+    public static bool openSalePage;
 
-	public static bool loadLaunchedRocket;
+    public static bool loadLaunchedRocket;
 
-	public AudioListener MainAudioListener;
+    public AudioListener MainAudioListener;
 
-	public static AudioListener mainAudioListener;
+    public static AudioListener mainAudioListener;
 
-	public static bool hasPartsExpansion;
+    public static bool hasPartsExpansion;
 
-	public static bool hasHackedExpansion;
+    public static bool infiniteFuel;
 
-	public static bool infiniteFuel;
+    public static bool noDrag;
 
-	public static bool noDrag;
+    public static bool unbreakableParts;
 
-	public enum SceneType
-	{
-		MainMenu,
-		Build,
-		Game
-	}
+    public static bool noGravity;
+
+    public static bool orbitInfo;
+
+    public enum SceneType
+    {
+        MainMenu,
+        Build,
+        Game
+    }
 }

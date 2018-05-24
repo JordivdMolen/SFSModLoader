@@ -34,16 +34,15 @@ public class Part : MonoBehaviour
 		bool flag = myPartUseHook.isCanceled();
 		if (!flag)
 		{
-			bool flag2 = this.useEvent;
-			if (flag2)
-			{
-				this.onPartUsed.Invoke();
-			}
-			for (int i = 0; i < this.modules.Length; i++)
-			{
-				this.modules[i].OnPartUsed();
-			}
-			new MyPartUsedHook(this).executeDefault();
+            if (this.useEvent)
+            {
+                this.onPartUsed.Invoke();
+            }
+            for (int i = 0; i < this.modules.Length; i++)
+            {
+                this.modules[i].OnPartUsed();
+            }
+            new MyPartUsedHook(this).executeDefault();
 		}
 	}
 
@@ -260,176 +259,164 @@ public class Part : MonoBehaviour
 	{
 	}
 
-	[FoldoutGroup("Info", 0)]
-	public Vessel vessel;
+    [FoldoutGroup("Info", 0)]
+    public Vessel vessel;
 
-	[FoldoutGroup("Info", 0)]
-	public int connectionCheckId;
+    [FoldoutGroup("Info", 0)]
+    public int connectionCheckId;
 
-	[FoldoutGroup("Part Data", 0)]
-	[ReadOnly]
-	public PartData partData;
+    [FoldoutGroup("Part Data", 0)]
+    [ReadOnly]
+    public PartData partData;
 
-	[FoldoutGroup("Part Data", 0)]
-	public float mass;
+    [FoldoutGroup("Part Data", 0)]
+    public float mass;
 
-	[FoldoutGroup("Part Data", 0)]
-	public Vector3 centerOfMass;
+    [FoldoutGroup("Part Data", 0)]
+    public Vector3 centerOfMass;
 
-	[FoldoutGroup("Part Data", 0)]
-	public Vector2 centerOfDrag;
+    [FoldoutGroup("Part Data", 0)]
+    public Vector2 centerOfDrag;
 
-	[FoldoutGroup("Part Data", 0)]
-	public Orientation orientation;
+    [FoldoutGroup("Part Data", 0)]
+    public Orientation orientation;
 
-	[FoldoutGroup("Joints and Active Drag Surface", 0)]
-	[TableList]
-	public List<Part.Joint> joints;
+    [FoldoutGroup("Joints and Active Drag Surface", 0)]
+    [TableList]
+    public List<Part.Joint> joints;
 
-	[FoldoutGroup("Joints and Active Drag Surface", 0)]
-	[TableList]
-	public List<Part.ActiveDragSurafce> activeDragSurfaces;
+    [FoldoutGroup("Joints and Active Drag Surface", 0)]
+    [TableList]
+    public List<Part.ActiveDragSurafce> activeDragSurfaces;
 
-	[BoxGroup]
-	public Module[] modules;
+    [BoxGroup]
+    public Module[] modules;
 
-	public bool useEvent;
+    public bool useEvent;
 
-	[ShowIf("useEvent", true)]
-	public UnityEvent onPartUsed;
+    [ShowIf("useEvent", true)]
+    public UnityEvent onPartUsed;
 
-	[Serializable]
-	public class Joint
-	{
-		public Joint(Vector2 anchor, Part fromPart, Part toPart, int fromSurfaceIndex, int toSurfaceIndex, bool fuelFlow)
-		{
-			this.fromPart = fromPart;
-			this.toPart = toPart;
-			this.fromSurfaceIndex = fromSurfaceIndex;
-			this.toSurfaceIndex = toSurfaceIndex;
-			this.anchor = anchor;
-			this.fuelFlow = fuelFlow;
-			bool flag = fromPart.partData.attachmentSurfaces.Length > fromSurfaceIndex && toPart.partData.attachmentSurfaces.Length > toSurfaceIndex;
-			if (flag)
-			{
-				this.coveredAmount = Part.Joint.SurfacesConnect(anchor, fromPart, fromPart.partData.attachmentSurfaces[fromSurfaceIndex], toPart, toPart.partData.attachmentSurfaces[toSurfaceIndex]);
-			}
-			else
-			{
-				MonoBehaviour.print("from " + fromSurfaceIndex);
-				MonoBehaviour.print("to " + toSurfaceIndex);
-			}
-			fromPart.joints.Add(this);
-			toPart.joints.Add(this);
-		}
+    [Serializable]
+    public class Joint
+    {
+        public Joint(Vector2 anchor, Part fromPart, Part toPart, int fromSurfaceIndex, int toSurfaceIndex, bool fuelFlow)
+        {
+            this.fromPart = fromPart;
+            this.toPart = toPart;
+            this.fromSurfaceIndex = fromSurfaceIndex;
+            this.toSurfaceIndex = toSurfaceIndex;
+            this.anchor = anchor;
+            this.resourceFlow = fuelFlow;
+            if (fromPart.partData.attachmentSurfaces.Length > fromSurfaceIndex && toPart.partData.attachmentSurfaces.Length > toSurfaceIndex)
+            {
+                this.coveredAmount = Part.Joint.SurfacesConnect(anchor, fromPart, fromPart.partData.attachmentSurfaces[fromSurfaceIndex], toPart, toPart.partData.attachmentSurfaces[toSurfaceIndex]);
+            }
+            else
+            {
+                MonoBehaviour.print("from " + fromSurfaceIndex);
+                MonoBehaviour.print("to " + toSurfaceIndex);
+            }
+            fromPart.joints.Add(this);
+            toPart.joints.Add(this);
+        }
 
-		public static float SurfacesConnect(Vector2 anchor, Part partA, PartData.AttachmentSurface surfaceA, Part partB, PartData.AttachmentSurface surfaceB)
-		{
-			bool flag = Mathf.Abs((surfaceA.size * partA.orientation).x) > 0.1f;
-			bool flag2 = Mathf.Abs((surfaceB.size * partB.orientation).x) > 0.1f;
-			bool flag3 = flag != flag2;
-			float result;
-			if (flag3)
-			{
-				result = 0f;
-			}
-			else
-			{
-				Vector2 vector = surfaceA.start * partA.orientation;
-				Vector2 vector2 = anchor + surfaceB.start * partB.orientation;
-				bool flag4 = (!flag) ? (Mathf.Abs(vector.x - vector2.x) > 0.1f) : (Mathf.Abs(vector.y - vector2.y) > 0.1f);
-				if (flag4)
-				{
-					result = 0f;
-				}
-				else
-				{
-					Vector2 vector3 = (surfaceA.start + surfaceA.size) * partA.orientation;
-					Vector2 vector4 = anchor + (surfaceB.start + surfaceB.size) * partB.orientation;
-					result = ((!flag) ? Utility.Overlap(vector.y, vector3.y, vector2.y, vector4.y) : Utility.Overlap(vector.x, vector3.x, vector2.x, vector4.x));
-				}
-			}
-			return result;
-		}
+        public static float SurfacesConnect(Vector2 anchor, Part partA, PartData.AttachmentSurface surfaceA, Part partB, PartData.AttachmentSurface surfaceB)
+        {
+            bool flag = Mathf.Abs((surfaceA.size * partA.orientation).x) > 0.1f;
+            bool flag2 = Mathf.Abs((surfaceB.size * partB.orientation).x) > 0.1f;
+            if (flag != flag2)
+            {
+                return 0f;
+            }
+            Vector2 vector = surfaceA.start * partA.orientation;
+            Vector2 vector2 = anchor + surfaceB.start * partB.orientation;
+            if ((!flag) ? (Mathf.Abs(vector.x - vector2.x) > 0.1f) : (Mathf.Abs(vector.y - vector2.y) > 0.1f))
+            {
+                return 0f;
+            }
+            Vector2 vector3 = (surfaceA.start + surfaceA.size) * partA.orientation;
+            Vector2 vector4 = anchor + (surfaceB.start + surfaceB.size) * partB.orientation;
+            return (!flag) ? Utility.Overlap(vector.y, vector3.y, vector2.y, vector4.y) : Utility.Overlap(vector.x, vector3.x, vector2.x, vector4.x);
+        }
 
-		public Vector2 RelativeAnchor(Part part)
-		{
-			return (!(this.fromPart == part)) ? (-this.anchor) : this.anchor;
-		}
+        public Vector2 RelativeAnchor(Part part)
+        {
+            return (!(this.fromPart == part)) ? (-this.anchor) : this.anchor;
+        }
 
-		public Part fromPart;
+        public Part fromPart;
 
-		public Part toPart;
+        public Part toPart;
 
-		public int fromSurfaceIndex;
+        public int fromSurfaceIndex;
 
-		public int toSurfaceIndex;
+        public int toSurfaceIndex;
 
-		public Vector2 anchor;
+        public Vector2 anchor;
 
-		public float coveredAmount;
+        public float coveredAmount;
 
-		public bool fuelFlow;
+        public bool resourceFlow;
 
-		[Serializable]
-		public class Save
-		{
-			public Save(int fromPartId, int toPartId, Vector2 anchor, int fromSurfaceIndex, int toSurfaceIndex, bool fuelFlow)
-			{
-				this.fromPartId = fromPartId;
-				this.toPartId = toPartId;
-				this.anchor = anchor;
-				this.fromSurfaceIndex = fromSurfaceIndex;
-				this.toSurfaceIndex = toSurfaceIndex;
-				this.fuelFlow = fuelFlow;
+        [Serializable]
+        public class Save
+        {
+            public Save(int fromPartId, int toPartId, Vector2 anchor, int fromSurfaceIndex, int toSurfaceIndex, bool fuelFlow)
+            {
+                this.fromPartId = fromPartId;
+                this.toPartId = toPartId;
+                this.anchor = anchor;
+                this.fromSurfaceIndex = fromSurfaceIndex;
+                this.toSurfaceIndex = toSurfaceIndex;
+                this.fuelFlow = fuelFlow;
             }
 
-			public static int GetToPartIndex(Part.Joint joint, List<Part> parts)
-			{
-				for (int i = 0; i < parts.Count; i++)
-				{
-					bool flag = parts[i] == joint.toPart;
-					if (flag)
-					{
-						return i;
-					}
-				}
-				return -1;
-			}
+            public static int GetToPartIndex(Part.Joint joint, List<Part> parts)
+            {
+                for (int i = 0; i < parts.Count; i++)
+                {
+                    if (parts[i] == joint.toPart)
+                    {
+                        return i;
+                    }
+                }
+                return -1;
+            }
 
-			public int fromPartId;
+            public int fromPartId;
 
-			public int toPartId;
+            public int toPartId;
 
-			public Vector2 anchor;
+            public Vector2 anchor;
 
-			public int fromSurfaceIndex;
+            public int fromSurfaceIndex;
 
-			public int toSurfaceIndex;
+            public int toSurfaceIndex;
 
-			public bool fuelFlow;
-		}
-	}
+            public bool fuelFlow;
+        }
+    }
 
-	[Serializable]
-	public class ActiveDragSurafce
-	{
-		public ActiveDragSurafce(PartData.DragSurface dragSurface, Orientation orientation, float coveredArea)
-		{
-			this.point = dragSurface.point;
-			this.size = dragSurface.size - coveredArea;
-			this.angleRad = ((!this.point) ? (dragSurface.angleRad * orientation) : float.NaN);
-		}
+    [Serializable]
+    public class ActiveDragSurafce
+    {
+        public ActiveDragSurafce(PartData.DragSurface dragSurface, Orientation orientation, float coveredArea)
+        {
+            this.point = dragSurface.point;
+            this.size = dragSurface.size - coveredArea;
+            this.angleRad = ((!this.point) ? (dragSurface.angleRad * orientation) : float.NaN);
+        }
 
-		public bool point;
+        public bool point;
 
-		[HideIf("point", true)]
-		public float angleRad;
+        [HideIf("point", true)]
+        public float angleRad;
 
-		public float size;
-	}
+        public float size;
+    }
 
-	[Serializable]
+    [Serializable]
 	public class Save
 	{
 		public Save(Part part, Orientation orientation, List<Part> parts)

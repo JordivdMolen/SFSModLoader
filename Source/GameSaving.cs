@@ -8,50 +8,49 @@ using SFSML.HookSystem.ReWork.BaseHooks.SaveHooks;
 
 public class GameSaving : MonoBehaviour
 {
-	public static GameSaving.GameSave GetGameSaveData(string saveName)
-	{
-		return new GameSaving.GameSave(saveName, GameSaving.GetVesselListIndex(Ref.mainVessel), GameSaving.GetVesselListIndex(Ref.selectedVessel), GameSaving.GetVesselSaveData(Ref.controller.vessels), Ref.positionOffset, Ref.velocityOffset, Ref.controller.globalTime, Ref.controller.timewarpPhase, Ref.controller.startedTimewarpTime, Ref.controller.cameraDistanceGame, Ref.mapView, Ref.map.mapPosition, Ref.map.following.GetFollowingBody().bodyName);
-	}
+    public static GameSaving.GameSave GetGameSaveData(string saveName)
+    {
+        return new GameSaving.GameSave(saveName, GameSaving.GetVesselListIndex(Ref.mainVessel), GameSaving.GetVesselListIndex(Ref.selectedVessel), GameSaving.GetVesselSaveData(Ref.controller.vessels), Ref.positionOffset, Ref.velocityOffset, Ref.controller.globalTime, Ref.controller.timewarpPhase, Ref.controller.startedTimewarpTime, Ref.controller.cameraDistanceGame, Ref.mapView, Ref.map.mapPosition, Ref.map.following.GetFollowingBody().bodyName);
+    }
 
-	private static List<GameSaving.VesselSave> GetVesselSaveData(List<Vessel> vesselsToSave)
-	{
-		List<GameSaving.VesselSave> list = new List<GameSaving.VesselSave>();
-		for (int i = 0; i < vesselsToSave.Count; i++)
-		{
-			list.Add(new GameSaving.VesselSave(vesselsToSave[i].state, vesselsToSave[i].GetVesselPlanet.bodyName, vesselsToSave[i].GetGlobalPosition, vesselsToSave[i].GetGlobalVelocity, vesselsToSave[i].partsManager.rb2d.rotation, vesselsToSave[i].partsManager.rb2d.angularVelocity, vesselsToSave[i].throttle, GameSaving.GetPartsSaveData(vesselsToSave[i].partsManager.parts), GameSaving.GetPartsJointsSave(vesselsToSave[i].partsManager.parts), vesselsToSave[i].vesselAchievements, vesselsToSave[i].RCS));
-		}
-		return list;
-	}
+    private static List<GameSaving.VesselSave> GetVesselSaveData(List<Vessel> vesselsToSave)
+    {
+        List<GameSaving.VesselSave> list = new List<GameSaving.VesselSave>();
+        for (int i = 0; i < vesselsToSave.Count; i++)
+        {
+            list.Add(new GameSaving.VesselSave(vesselsToSave[i].state, vesselsToSave[i].GetVesselPlanet.bodyName, vesselsToSave[i].GetGlobalPosition, vesselsToSave[i].GetGlobalVelocity, vesselsToSave[i].partsManager.rb2d.rotation, vesselsToSave[i].partsManager.rb2d.angularVelocity, vesselsToSave[i].throttle, GameSaving.GetPartsSaveData(vesselsToSave[i].partsManager.parts), GameSaving.GetPartsJointsSave(vesselsToSave[i].partsManager.parts), vesselsToSave[i].vesselAchievements, vesselsToSave[i].RCS));
+        }
+        return list;
+    }
 
-	private static Part.Save[] GetPartsSaveData(List<Part> partsToSave)
-	{
-		int count = partsToSave.Count;
-		Part.Save[] array = new Part.Save[count];
-		for (int i = 0; i < count; i++)
-		{
-			array[i] = new Part.Save(partsToSave[i], partsToSave[i].orientation, partsToSave);
-		}
-		return array;
-	}
+    private static Part.Save[] GetPartsSaveData(List<Part> partsToSave)
+    {
+        int count = partsToSave.Count;
+        Part.Save[] array = new Part.Save[count];
+        for (int i = 0; i < count; i++)
+        {
+            array[i] = new Part.Save(partsToSave[i], partsToSave[i].orientation, partsToSave);
+        }
+        return array;
+    }
 
-	private static Part.Joint.Save[] GetPartsJointsSave(List<Part> parts)
-	{
-		List<Part.Joint.Save> list = new List<Part.Joint.Save>();
-		foreach (Part part in parts)
-		{
-			foreach (Part.Joint joint in part.joints)
-			{
-				bool flag = joint.fromPart == part;
-				if (flag)
-				{
-					list.Add(new Part.Joint.Save(Part.GetPartListIndex(joint.fromPart, parts), Part.GetPartListIndex(joint.toPart, parts), joint.anchor, joint.fromSurfaceIndex, joint.toSurfaceIndex, joint.fuelFlow));
-				}
-			}
-		}
-		return list.ToArray();
-	}
+    private static Part.Joint.Save[] GetPartsJointsSave(List<Part> parts)
+    {
+        List<Part.Joint.Save> list = new List<Part.Joint.Save>();
+        foreach (Part part in parts)
+        {
+            foreach (Part.Joint joint in part.joints)
+            {
+                if (joint.fromPart == part)
+                {
+                    list.Add(new Part.Joint.Save(Part.GetPartListIndex(joint.fromPart, parts), Part.GetPartListIndex(joint.toPart, parts), joint.anchor, joint.fromSurfaceIndex, joint.toSurfaceIndex, joint.resourceFlow));
+                }
+            }
+        }
+        return list.ToArray();
+    }
 
-	public static void LoadGame(GameSaving.GameSave loadedData)
+    public static void LoadGame(GameSaving.GameSave loadedData)
 	{
 		GameSaving.ClearScene();
         MySaveLoadedHook mySaveLoadedHook = new MySaveLoadedHook(loadedData);
@@ -61,181 +60,160 @@ public class GameSaving : MonoBehaviour
             return;
         }
 
-
         Ref.planetManager.SwitchLocation(Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress), loadedData.vessels[loadedData.mainVesselId].globalPosition, false, true, 0.0);
-		Ref.velocityOffset = loadedData.velocityOffset;
-		Ref.controller.globalTime = loadedData.globalTime;
-		Ref.controller.timewarpPhase = loadedData.timeWarpPhase;
-		Ref.controller.startedTimewarpTime = loadedData.startedTimewapTime;
-		Ref.timeWarping = (Ref.controller.timewarpPhase != 0);
-		Ref.controller.SetCameraDistance(loadedData.camDistance);
-		foreach (GameSaving.VesselSave vesselToLoad in loadedData.vessels)
-		{
-			GameSaving.LoadVessel(vesselToLoad);
-		}
-		Ref.planetManager.FullyLoadTerrain(Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress));
-		Ref.mainVessel = Ref.controller.vessels[loadedData.mainVesselId];
-		bool flag = loadedData.selectedVesselId != -1;
-		if (flag)
-		{
-			Ref.map.SelectVessel(Ref.controller.vessels[loadedData.selectedVesselId], false);
-		}
-		Ref.map.UpdateVesselsMapIcons();
-		Ref.map.following = new OrbitLines.Target(Ref.GetPlanetByName(loadedData.mapFollowingAdress));
-		Ref.map.UpdateMapPosition(loadedData.mapPosition);
-		Ref.map.UpdateMapZoom(-loadedData.mapPosition.z);
-		Ref.map.ToggleMap();
-		bool flag2 = Ref.mapView != loadedData.mapView;
-		if (flag2)
-		{
-			Ref.map.ToggleMap();
-		}
-		Ref.mainVessel.SetThrottle(Ref.mainVessel.throttle);
-		Ref.map.DrawOrbitLines();
-		Ref.controller.RepositionFuelIcons();
-		Ref.controller.warpedTimeCounterUI.text = string.Empty;
-		Ref.planetManager.UpdateAtmosphereFade();
-		Ref.mainVesselHeight = loadedData.vessels[loadedData.mainVesselId].globalPosition.magnitude2d - Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress).radius;
-		Ref.mainVesselAngleToPlanet = (float)Math.Atan2(loadedData.vessels[loadedData.mainVesselId].globalPosition.y, loadedData.vessels[loadedData.mainVesselId].globalPosition.x) * 57.29578f;
-		bool flag3 = Ref.mainVesselHeight < Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress).cameraSwitchHeightM;
-		if (flag3)
-		{
-			Ref.controller.camTargetAngle = Ref.mainVesselAngleToPlanet - 90f;
-		}
-		else
-		{
-			Ref.controller.camTargetAngle = 0f;
-		}
-		Ref.cam.transform.eulerAngles = new Vector3(0f, 0f, Ref.controller.camTargetAngle);
-		Ref.controller.camAngularVelocity = 0f;
-	}
+        Ref.velocityOffset = loadedData.velocityOffset;
+        Ref.controller.globalTime = loadedData.globalTime;
+        Ref.controller.timewarpPhase = loadedData.timeWarpPhase;
+        Ref.controller.startedTimewarpTime = loadedData.startedTimewapTime;
+        Ref.timeWarping = (Ref.controller.timewarpPhase != 0);
+        Ref.controller.SetCameraDistance(loadedData.camDistance);
+        foreach (GameSaving.VesselSave vesselToLoad in loadedData.vessels)
+        {
+            GameSaving.LoadVessel(vesselToLoad);
+        }
+        Ref.planetManager.FullyLoadTerrain(Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress));
+        Ref.mainVessel = Ref.controller.vessels[loadedData.mainVesselId];
+        if (loadedData.selectedVesselId != -1)
+        {
+            Ref.map.SelectVessel(Ref.controller.vessels[loadedData.selectedVesselId], false);
+        }
+        Ref.map.UpdateVesselsMapIcons();
+        Ref.map.following = new OrbitLines.Target(Ref.GetPlanetByName(loadedData.mapFollowingAdress));
+        Ref.map.UpdateMapPosition(loadedData.mapPosition);
+        Ref.map.UpdateMapZoom(-loadedData.mapPosition.z);
+        Ref.map.ToggleMap();
+        if (Ref.mapView != loadedData.mapView)
+        {
+            Ref.map.ToggleMap();
+        }
+        Ref.mainVessel.SetThrottle(Ref.mainVessel.throttle);
+        Ref.map.DrawOrbitLines();
+        Ref.controller.RepositionFuelIcons();
+        Ref.controller.warpedTimeCounterUI.text = string.Empty;
+        Ref.planetManager.UpdateAtmosphereFade();
+        Ref.mainVesselHeight = loadedData.vessels[loadedData.mainVesselId].globalPosition.magnitude2d - Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress).radius;
+        Ref.mainVesselAngleToPlanet = (float)Math.Atan2(loadedData.vessels[loadedData.mainVesselId].globalPosition.y, loadedData.vessels[loadedData.mainVesselId].globalPosition.x) * 57.29578f;
+        if (Ref.mainVesselHeight < Ref.GetPlanetByName(loadedData.vessels[loadedData.mainVesselId].adress).cameraSwitchHeightM)
+        {
+            Ref.controller.camTargetAngle = Ref.mainVesselAngleToPlanet - 90f;
+        }
+        else
+        {
+            Ref.controller.camTargetAngle = 0f;
+        }
+        Ref.cam.transform.eulerAngles = new Vector3(0f, 0f, Ref.controller.camTargetAngle);
+        Ref.controller.camAngularVelocity = 0f;
+    }
 
-	public static void LoadForLaunch(GameSaving.GameSave loadedData, Double3 launchPadPosition)
-	{
-		for (int i = 0; i < loadedData.vessels.Count; i++)
-		{
-			bool flag = loadedData.vessels[i].adress == Ref.controller.startAdress && Math.Abs(loadedData.vessels[i].globalPosition.x - launchPadPosition.x) < 10.0 && Math.Abs(loadedData.vessels[i].globalPosition.y - launchPadPosition.y) < 40.0;
-			if (flag)
-			{
-				loadedData.vessels.RemoveAt(i);
-				i--;
-			}
-			else
-			{
-				Vessel.State state = loadedData.vessels[i].state;
-				bool flag2 = state > Vessel.State.RealTime;
-				if (flag2)
-				{
-					bool flag3 = state != Vessel.State.OnRails;
-					if (flag3)
-					{
-						bool flag4 = state == Vessel.State.Stationary;
-						if (flag4)
-						{
-							loadedData.vessels[i].state = Vessel.State.StationaryUnloaded;
-						}
-					}
-					else
-					{
-						loadedData.vessels[i].state = Vessel.State.OnRailsUnloaded;
-					}
-				}
-				else
-				{
-					bool flag5 = (loadedData.vessels[i].globalPosition - launchPadPosition).magnitude2d > 1000.0 || loadedData.vessels[i].adress != Ref.controller.startAdress;
-					if (flag5)
-					{
-						loadedData.vessels[i].state = ((Math.Abs(loadedData.vessels[i].globalVelocity.x) <= 1.0 && Math.Abs(loadedData.vessels[i].globalVelocity.y) <= 1.0) ? Vessel.State.StationaryUnloaded : Vessel.State.OnRailsUnloaded);
-					}
-				}
-			}
-		}
-		Ref.planetManager.SwitchLocation(Ref.GetPlanetByName(Ref.controller.startAdress), launchPadPosition, false, true, 0.0);
-		Ref.planetManager.UpdatePositionOffset(new Double3(0.0, 315000.0));
-		Ref.velocityOffset = Double3.zero;
-		Ref.controller.globalTime = loadedData.globalTime;
-		Ref.controller.timewarpPhase = 0;
-		Ref.timeWarping = false;
-		foreach (GameSaving.VesselSave vesselToLoad in loadedData.vessels)
-		{
-			GameSaving.LoadVessel(vesselToLoad);
-		}
-		Ref.map.following = new OrbitLines.Target(Ref.GetPlanetByName(Ref.controller.startAdress));
-		Ref.map.UpdateMapPosition(new Double3(0.0, launchPadPosition.y / 10000.0));
-		Ref.map.UpdateMapZoom(launchPadPosition.y / 10000.0 / 20.0);
-		Ref.planetManager.UpdateAtmosphereFade();
-		Ref.controller.warpedTimeCounterUI.text = string.Empty;
-	}
+    public static void LoadForLaunch(GameSaving.GameSave loadedData, Double3 launchPadPosition)
+    {
+        for (int i = 0; i < loadedData.vessels.Count; i++)
+        {
+            if (loadedData.vessels[i].adress == Ref.controller.startAdress && Math.Abs(loadedData.vessels[i].globalPosition.x - launchPadPosition.x) < 10.0 && Math.Abs(loadedData.vessels[i].globalPosition.y - launchPadPosition.y) < 40.0)
+            {
+                loadedData.vessels.RemoveAt(i);
+                i--;
+            }
+            else
+            {
+                Vessel.State state = loadedData.vessels[i].state;
+                if (state != Vessel.State.RealTime)
+                {
+                    if (state != Vessel.State.OnRails)
+                    {
+                        if (state == Vessel.State.Stationary)
+                        {
+                            loadedData.vessels[i].state = Vessel.State.StationaryUnloaded;
+                        }
+                    }
+                    else
+                    {
+                        loadedData.vessels[i].state = Vessel.State.OnRailsUnloaded;
+                    }
+                }
+                else if ((loadedData.vessels[i].globalPosition - launchPadPosition).magnitude2d > 1000.0 || loadedData.vessels[i].adress != Ref.controller.startAdress)
+                {
+                    loadedData.vessels[i].state = ((Math.Abs(loadedData.vessels[i].globalVelocity.x) <= 1.0 && Math.Abs(loadedData.vessels[i].globalVelocity.y) <= 1.0) ? Vessel.State.StationaryUnloaded : Vessel.State.OnRailsUnloaded);
+                }
+            }
+        }
+        Ref.planetManager.SwitchLocation(Ref.GetPlanetByName(Ref.controller.startAdress), launchPadPosition, false, true, 0.0);
+        Ref.planetManager.UpdatePositionOffset(new Double3(0.0, 315000.0));
+        Ref.velocityOffset = Double3.zero;
+        Ref.controller.globalTime = loadedData.globalTime;
+        Ref.controller.timewarpPhase = 0;
+        Ref.timeWarping = false;
+        foreach (GameSaving.VesselSave vesselToLoad in loadedData.vessels)
+        {
+            GameSaving.LoadVessel(vesselToLoad);
+        }
+        Ref.map.following = new OrbitLines.Target(Ref.GetPlanetByName(Ref.controller.startAdress));
+        Ref.map.UpdateMapPosition(new Double3(0.0, launchPadPosition.y / 10000.0));
+        Ref.map.UpdateMapZoom(launchPadPosition.y / 10000.0 / 20.0);
+        Ref.planetManager.UpdateAtmosphereFade();
+        Ref.controller.warpedTimeCounterUI.text = string.Empty;
+    }
 
-	private static Vessel LoadVessel(GameSaving.VesselSave vesselToLoad)
-	{
-		List<Part> list = new List<Part>(GameSaving.LoadParts(vesselToLoad));
-		Part[] loadedParts = list.ToArray();
-		list.Remove(null);
-		Orientation.ApplyOrientation(list[0].transform, list[0].orientation);
-		Vessel vessel = Vessel.CreateVessel(list[0].GetComponent<Part>(), Vector2.zero, vesselToLoad.angularVelocity, vesselToLoad.throttle, vesselToLoad.vesselArchivments, Ref.map.mapRefs[Ref.GetPlanetByName(vesselToLoad.adress)].holder);
-		for (int i = 0; i < vessel.partsManager.parts.Count; i++)
-		{
-			bool flag = vessel.partsManager.parts[i] != null;
-			if (flag)
-			{
-				vessel.partsManager.parts[i].UpdateConnected();
-			}
-		}
-		vessel.partsManager.UpdateCenterOfMass();
-		vessel.partsManager.ReCenter();
-		vessel.transform.position = (vesselToLoad.globalPosition - Ref.positionOffset).toVector2;
-		vessel.transform.eulerAngles = new Vector3(0f, 0f, vesselToLoad.rotation);
-		bool flag2 = vesselToLoad.state == Vessel.State.RealTime;
-		if (flag2)
-		{
-			vessel.partsManager.rb2d.velocity = (vesselToLoad.globalVelocity - Ref.velocityOffset).toVector2;
-		}
-		else
-		{
-			bool flag3 = vesselToLoad.state == Vessel.State.OnRails || vesselToLoad.state == Vessel.State.OnRailsUnloaded;
-			if (flag3)
-			{
-				vessel.orbits = Orbit.CalculateOrbits(vesselToLoad.globalPosition, vesselToLoad.globalVelocity, Ref.GetPlanetByName(vesselToLoad.adress));
-				vessel.partsManager.rb2d.bodyType = RigidbodyType2D.Static;
-				vessel.state = Vessel.State.OnRails;
-				bool flag4 = vessel.state == Vessel.State.OnRailsUnloaded;
-				if (flag4)
-				{
-					vessel.SetVesselState(Vessel.ToState.ToUnloaded);
-				}
-				bool flag5 = double.IsNaN(vessel.orbits[0].meanMotion);
-				if (flag5)
-				{
-					MonoBehaviour.print("Cannot orbit NaN, went stationary instead");
-					vessel.orbits.Clear();
-					vessel.stationaryData.posToPlane = vesselToLoad.globalPosition;
-					vessel.stationaryData.planet = Ref.GetPlanetByName(vesselToLoad.adress);
-					vessel.state = Vessel.State.Stationary;
-					vessel.SetVesselState(Vessel.ToState.ToUnloaded);
-					vessel.mapIcon.localPosition = (vessel.stationaryData.posToPlane / 10000.0).toVector3;
-				}
-			}
-			else
-			{
-				vessel.stationaryData.posToPlane = vesselToLoad.globalPosition;
-				vessel.stationaryData.planet = Ref.GetPlanetByName(vesselToLoad.adress);
-				vessel.state = Vessel.State.Stationary;
-				bool flag6 = vesselToLoad.state == Vessel.State.StationaryUnloaded;
-				if (flag6)
-				{
-					vessel.SetVesselState(Vessel.ToState.ToUnloaded);
-				}
-				vessel.mapIcon.localPosition = (vessel.stationaryData.posToPlane / 10000.0).toVector3;
-			}
-		}
-		GameSaving.LoadPartsData(vesselToLoad, loadedParts);
-		vessel.mapIcon.rotation = vessel.partsManager.parts[0].transform.rotation;
-		vessel.RCS = vesselToLoad.RCS;
-		return vessel;
-	}
+    private static Vessel LoadVessel(GameSaving.VesselSave vesselToLoad)
+    {
+        List<Part> list = new List<Part>(GameSaving.LoadParts(vesselToLoad));
+        Part[] loadedParts = list.ToArray();
+        GameSaving.LoadPartsData(vesselToLoad, loadedParts);
+        list.Remove(null);
+        Orientation.ApplyOrientation(list[0].transform, list[0].orientation);
+        Vessel vessel = Vessel.CreateVessel(list[0].GetComponent<Part>(), Vector2.zero, vesselToLoad.angularVelocity, vesselToLoad.throttle, vesselToLoad.vesselArchivments, Ref.map.mapRefs[Ref.GetPlanetByName(vesselToLoad.adress)].holder);
+        for (int i = 0; i < vessel.partsManager.parts.Count; i++)
+        {
+            if (vessel.partsManager.parts[i] != null)
+            {
+                vessel.partsManager.parts[i].UpdateConnected();
+            }
+        }
+        vessel.partsManager.UpdateCenterOfMass();
+        vessel.partsManager.ReCenter();
+        vessel.transform.position = (vesselToLoad.globalPosition - Ref.positionOffset).toVector2;
+        vessel.transform.eulerAngles = new Vector3(0f, 0f, vesselToLoad.rotation);
+        if (vesselToLoad.state == Vessel.State.RealTime)
+        {
+            vessel.partsManager.rb2d.velocity = (vesselToLoad.globalVelocity - Ref.velocityOffset).toVector2;
+        }
+        else if (vesselToLoad.state == Vessel.State.OnRails || vesselToLoad.state == Vessel.State.OnRailsUnloaded)
+        {
+            vessel.orbits = Orbit.CalculateOrbits(vesselToLoad.globalPosition, vesselToLoad.globalVelocity, Ref.GetPlanetByName(vesselToLoad.adress));
+            vessel.partsManager.rb2d.bodyType = RigidbodyType2D.Static;
+            vessel.state = Vessel.State.OnRails;
+            if (vessel.state == Vessel.State.OnRailsUnloaded)
+            {
+                vessel.SetVesselState(Vessel.ToState.ToUnloaded);
+            }
+            if (double.IsNaN(vessel.orbits[0].meanMotion))
+            {
+                MonoBehaviour.print("Cannot orbit NaN, went stationary instead");
+                vessel.orbits.Clear();
+                vessel.stationaryData.posToPlane = vesselToLoad.globalPosition;
+                vessel.stationaryData.planet = Ref.GetPlanetByName(vesselToLoad.adress);
+                vessel.state = Vessel.State.Stationary;
+                vessel.SetVesselState(Vessel.ToState.ToUnloaded);
+                vessel.mapIcon.localPosition = (vessel.stationaryData.posToPlane / 10000.0).toVector3;
+            }
+        }
+        else
+        {
+            vessel.stationaryData.posToPlane = vesselToLoad.globalPosition;
+            vessel.stationaryData.planet = Ref.GetPlanetByName(vesselToLoad.adress);
+            vessel.state = Vessel.State.Stationary;
+            if (vesselToLoad.state == Vessel.State.StationaryUnloaded)
+            {
+                vessel.SetVesselState(Vessel.ToState.ToUnloaded);
+            }
+            vessel.mapIcon.localPosition = (vessel.stationaryData.posToPlane / 10000.0).toVector3;
+        }
+        vessel.mapIcon.rotation = vessel.partsManager.parts[0].transform.rotation;
+        vessel.RCS = vesselToLoad.RCS;
+        return vessel;
+    }
 
-	private static Part[] LoadParts(GameSaving.VesselSave vesselToLoad)
+    private static Part[] LoadParts(GameSaving.VesselSave vesselToLoad)
 	{
 		int num = vesselToLoad.parts.Length;
 		Part[] array = new Part[num];
