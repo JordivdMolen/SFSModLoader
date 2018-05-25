@@ -319,16 +319,16 @@ public class Ref : MonoBehaviour
     }
 
     public static float GetSizeOfWord(TextMesh text, string word)
-	{
-		float num = 0f;
-		foreach (char ch in word)
-		{
-			CharacterInfo characterInfo;
-			text.font.GetCharacterInfo(ch, out characterInfo, text.fontSize);
-			num += (float)characterInfo.advance;
-		}
-		return num;
-	}
+    {
+        float num = 0f;
+        foreach (char ch in word)
+        {
+            CharacterInfo characterInfo;
+            text.font.GetCharacterInfo(ch, out characterInfo, text.fontSize);
+            num += (float)characterInfo.advance;
+        }
+        return num;
+    }
 
     [BoxGroup("All Scenes", true, false, 0)]
     [Space]

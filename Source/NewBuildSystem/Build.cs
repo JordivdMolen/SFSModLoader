@@ -16,7 +16,7 @@ namespace NewBuildSystem
 		{
 			get
 			{
-				return (!Ref.hasPartsExpansion && !Ref.hasHackedExpansion) ? this.maxZoomBasic : this.maxZoomFull;
+				return (!Ref.hasPartsExpansion) ? this.maxZoomBasic : this.maxZoomFull;
 			}
 		}
 
@@ -25,36 +25,32 @@ namespace NewBuildSystem
 			Build.main = this;
 		}
 
-		private void Start()
-		{
-			this.PositionCameraStart();
-			Ref.partShader.SetFloat("_Intensity", 1.35f);
-			if (Ref.lastScene == Ref.SceneType.Game && GameSaving.GameSave.LoadPersistant().mainVesselId != -1)
-			{
-				this.exitButton.text = "Resume";
-			}
-			this.pickGrid.LoadIcons();
-			this.buildGrid.LoadAllIcons();
-			this.pickGrid.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(0f, (float)Screen.height, this.pickMenuDistance)) + (Vector3)this.pickMenuPosition;
-			bool loadLaunchedRocket = Ref.loadLaunchedRocket;
-			if (loadLaunchedRocket)
-			{
-				Ref.loadLaunchedRocket = false;
-				this.LoadSave(JsonUtility.FromJson<Build.BuildSave>(Ref.LoadJsonString(Saving.SaveKey.ToLaunch)));
-			}
-			this.descriptionMoveModule.SetTargetTime((float)((!Saving.LoadSetting(Saving.SettingKey.hidePartDescription)) ? 1 : 0));
-			this.descriptionMoveModule.SetTime((float)((!Saving.LoadSetting(Saving.SettingKey.hidePartDescription)) ? 1 : 0));
-			bool flag2 = !Saving.LoadSetting(Saving.SettingKey.seenBuildInstructions);
-			if (flag2)
-			{
-				this.dragAndDropInstruction.gameObject.SetActive(true);
-				Saving.SaveSetting(Saving.SettingKey.seenBuildInstructions, true);
-			}
-		}
+        private void Start()
+        {
+            this.PositionCameraStart();
+            Ref.partShader.SetFloat("_Intensity", 1.35f);
+            if (Ref.lastScene == Ref.SceneType.Game && GameSaving.GameSave.LoadPersistant().mainVesselId != -1)
+            {
+                this.exitButton.text = "Resume";
+            }
+            this.pickGrid.LoadIcons();
+            this.buildGrid.LoadAllIcons();
+            this.pickGrid.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(0f, (float)Screen.height, this.pickMenuDistance)) + (Vector3)this.pickMenuPosition;
+            if (Ref.loadLaunchedRocket)
+            {
+                Ref.loadLaunchedRocket = false;
+                this.LoadSave(JsonUtility.FromJson<Build.BuildSave>(Ref.LoadJsonString(Saving.SaveKey.ToLaunch)));
+            }
+            if (!Saving.LoadSetting(Saving.SettingKey.seenBuildInstructions))
+            {
+                this.dragAndDropInstruction.gameObject.SetActive(true);
+                Saving.SaveSetting(Saving.SettingKey.seenBuildInstructions, true);
+            }
+        }
 
-		public void PositionCameraStart()
+        public void PositionCameraStart()
 		{
-			Ref.cam.transform.position = ((!Ref.hasPartsExpansion && !Ref.hasHackedExpansion) ? this.camPosBasic : this.camPosExtended);
+			Ref.cam.transform.position = ((!Ref.hasPartsExpansion) ? this.camPosBasic : this.camPosExtended);
 		}
 
 		private void LateUpdate()

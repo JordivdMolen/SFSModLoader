@@ -1,15 +1,41 @@
 ﻿using System;
-using UnityEngine;
 
-public class Resource : MonoBehaviour
+public class Resource
 {
-	public Resource()
-	{
-	}
+    public static string GetResourceName(Resource.Type resourceType)
+    {
+        return (new string[]
+        {
+            "Fuel",
+            "Solid Fuel",
+            "Electric Power"
+        })[(int)resourceType];
+    }
 
-	public string resourceName;
+    public static string GetResourceUnit(Resource.Type resourceType)
+    {
+        return (new string[]
+        {
+            "t",
+            "t",
+            string.Empty
+        })[(int)resourceType];
+    }
 
-	public float resourceMass;
+    public static bool GrupsGlobally(Resource.Type resourceType)
+    {
+        return (new bool[]
+        {
+            default(bool),
+            default(bool),
+            true
+        })[(int)resourceType];
+    }
 
-	public string resourceUnit;
+    public enum Type
+    {
+        Fuel,
+        SolidFuel,
+        Power
+    }
 }

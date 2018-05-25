@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using SFSML.HookSystem.ReWork.BaseHooks.PartHooks;
 
 public class ResourceGroup : MonoBehaviour
 {
@@ -71,7 +72,7 @@ public class ResourceGroup : MonoBehaviour
 
 	public void TakeResource(double amount)
 	{
-		if (this.resourceAmount > amount)
+        if (this.resourceAmount > amount)
 		{
 			this.resourceAmount -= amount;
 		}

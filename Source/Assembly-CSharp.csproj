@@ -33,13 +33,47 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Apple, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Imports\Apple.dll</HintPath>
+    </Reference>
+    <Reference Include="ChannelPurchase, Version=0.0.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Imports\ChannelPurchase.dll</HintPath>
+    </Reference>
+    <Reference Include="FacebookStore, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Imports\FacebookStore.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security">
+      <HintPath>..\Imports\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Imports\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Purchasing.Common, Version=1.0.6633.147, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Imports\Purchasing.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Security, Version=1.0.6633.149, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Imports\Security.dll</HintPath>
+    </Reference>
     <Reference Include="Sirenix.OdinInspector.Attributes">
       <HintPath>..\Imports\Sirenix.OdinInspector.Attributes.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization.Config">
+      <HintPath>..\Imports\Sirenix.Serialization.Config.dll</HintPath>
     </Reference>
     <Reference Include="Stores">
       <HintPath>..\Imports\Stores.dll</HintPath>
     </Reference>
+    <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="Tizen, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Imports\Tizen.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\Imports\UnityEngine.dll</HintPath>
     </Reference>
@@ -51,6 +85,10 @@
     </Reference>
     <Reference Include="UnityStore">
       <HintPath>..\Imports\UnityStore.dll</HintPath>
+    </Reference>
+    <Reference Include="winrt, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Imports\winrt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

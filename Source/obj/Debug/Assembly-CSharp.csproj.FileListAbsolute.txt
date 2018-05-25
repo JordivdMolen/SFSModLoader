@@ -16,3 +16,8 @@ C:\Users\alex\Documents\GitHub\SFSModLoader\Source\bin\Debug\Tizen.dll
 C:\Users\alex\Documents\GitHub\SFSModLoader\Source\bin\Debug\FacebookStore.dll
 C:\Users\alex\Documents\GitHub\SFSModLoader\Source\obj\Debug\Assembly-CSharp.dll
 C:\Users\alex\Documents\GitHub\SFSModLoader\Source\obj\Debug\Assembly-CSharp.pdb
+C:\Users\alex\Documents\GitHub\SFSModLoader\Source\bin\Debug\Mono.Security.dll
+C:\Users\alex\Documents\GitHub\SFSModLoader\Source\bin\Debug\Newtonsoft.Json.dll
+C:\Users\alex\Documents\GitHub\SFSModLoader\Source\bin\Debug\Sirenix.Serialization.Config.dll
+C:\Users\alex\Documents\GitHub\SFSModLoader\Source\bin\Debug\System.Runtime.Serialization.dll
+C:\Users\alex\Documents\GitHub\SFSModLoader\Source\bin\Debug\Sirenix.Utilities.dll
