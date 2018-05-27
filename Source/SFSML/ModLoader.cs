@@ -363,7 +363,7 @@ namespace SFSML
 
 		public MyConsole myConsole;
 
-		public static readonly string version = "1.3.1";
+		public static readonly string version = "1.3.5";
 
 		private static string logTag = "ModLoader " + ModLoader.version;
 

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SFSML.Utility
 {
-    static class IMGUIUtil
+    public static class IMGUIUtil
     {
         private static int ID = int.MaxValue;
 

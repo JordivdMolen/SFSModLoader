@@ -227,7 +227,13 @@ public class GameSaving : MonoBehaviour
 				array[i].orientation = vesselToLoad.parts[i].orientation;
 
                 array[i].partData.tags = new Dictionary<string, object>();
-                array[i].partData.GUID = vesselToLoad.parts[i].GUID;
+                try
+                {
+                    array[i].partData.GUID = new Guid(vesselToLoad.parts[i].GUID);
+                } catch
+                {
+                    array[i].partData.GUID = Guid.NewGuid();
+                }
                 try
                 {
                     if (vesselToLoad.parts[i].tagsString != null)

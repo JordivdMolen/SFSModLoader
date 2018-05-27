@@ -85,7 +85,7 @@ namespace NewBuildSystem
         //Custom field for custom values saving
         public Dictionary<string, object> tags = new Dictionary<string, object>();
 
-        public Guid GUID = new Guid();
+        public Guid GUID = Guid.NewGuid();
 
         [Space]
 		public PartData.Area[] areas;

@@ -8,9 +8,9 @@ namespace SFSML.Translation.Languages
 		{
 		}
 
-		public string Version = "1.3.1";
+		public string Version = "1.3.5";
 
-		public string LoaderTag = "Hydria [1.3.1]";
+		public string LoaderTag = "Hydria [%Version%]";
 
 		public string LoaderVersion = "1.3.1";
 
